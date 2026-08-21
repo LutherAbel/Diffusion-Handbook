@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffusion Model Workspace</title>
+<style>
+  :root { --paper:#fbfbfa; --panel:#fff; --ink:#202124; --muted:#687078; --line:#e2e5e8; --blue:#1463dc; --blue-soft:#edf4ff; --green:#177245; --amber:#946200; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:"Segoe UI","Microsoft JhengHei",system-ui,sans-serif; line-height:1.72; }
+  .page { max-width:880px; min-height:100vh; margin:0 auto; padding:24px 20px 80px; }
+  .language { display:flex; flex-wrap:wrap; gap:6px 12px; margin:12px 0 20px; font-size:.9em; }
+  .language label { display:inline-block; cursor:pointer; padding:2px 8px; border:1px solid var(--line); border-radius:999px; color:var(--blue); font-size:1em; font-weight:400; }
+  .lang-control { position:absolute; opacity:0; pointer-events:none; }
+  #language-en:checked ~ .en, #language-zh:checked ~ .zh { display:block; }
+  #language-en:checked ~ .zh, #language-zh:checked ~ .en { display:none; }
+  #language-en:checked ~ .en .language label[for="language-en"], #language-zh:checked ~ .zh .language label[for="language-zh"] { background:var(--blue-soft); }
+  h1 { margin:0 0 4px; font-size:1.6em; letter-spacing:0; }
+  .tabs { display:flex; flex-wrap:wrap; gap:6px 12px; margin:12px 0 20px; font-size:.9em; }
+  .tabs a { padding:0; color:var(--blue); text-decoration:none; }
+  .tabs .active { color:var(--ink); font-weight:700; }
+  .workspace { position:relative; display:block; margin-top:30px; padding-top:32px; }
+  aside { position:absolute; z-index:2; top:0; left:0; }
+  details { position:static; }
+  summary { display:flex; align-items:center; gap:10px; cursor:pointer; list-style:none; font-size:.83rem; font-weight:750; letter-spacing:.06em; }
+  summary::-webkit-details-marker { display:none; }
+  summary::before { content:"×"; font-size:2rem; font-weight:350; line-height:.7; }
+  details:not([open]) summary::before { content:"☰"; font-size:1.15rem; }
+  .contents { position:absolute; top:30px; left:0; width:220px; max-height:calc(100vh - 112px); overflow-y:auto; margin:0; padding:18px 12px 18px 18px; background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:0 5px 20px rgba(31,35,40,.08); }
+  .contents h2 { margin:0 0 10px; font-size:.76rem; letter-spacing:.08em; }
+  .task-link { display:block; padding:8px 10px; border-radius:5px; color:var(--muted); text-decoration:none; }
+  .task-link:hover,.task-link.current { color:var(--ink); background:var(--blue-soft); }
+  .number { display:inline-block; width:31px; color:var(--blue); font-size:.82rem; }
+  article { display:none; max-width:none; }
+  article.active { display:block; }
+  .eyebrow { margin:0 0 8px; color:var(--blue); font-size:.84rem; font-weight:750; }
+  article h2 { margin:0 0 13px; font-size:1.85rem; line-height:1.3; }
+  .lead { margin:0 0 29px; color:var(--muted); font-size:1.05rem; }
+  .status { display:inline-block; margin-left:8px; padding:1px 7px; border-radius:999px; font-size:.74rem; font-weight:700; vertical-align:middle; }
+  .done { background:#e7f6ec; color:var(--green); }
+  .active-status { background:#fff3d9; color:var(--amber); }
+  .proposed { background:#eef1f4; color:#52606c; }
+  .section { padding:20px 0; border-top:1px solid var(--line); }
+  .section h3 { margin:0 0 8px; font-size:1rem; }
+  .section p,.section ul { margin:0; }
+  .section ul { padding-left:1.25rem; }
+  .section li + li { margin-top:5px; }
+  .flow { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:12px; color:var(--blue); font-size:.92rem; }
+  .flow span { padding:3px 8px; border:1px solid #cbdcf8; border-radius:4px; background:#f7faff; }
+  .flow b { color:var(--muted); font-weight:400; }
+  .result-table { width:100%; margin-top:11px; border-collapse:collapse; font-size:.9rem; }
+  .result-table th,.result-table td { padding:7px 8px; text-align:right; border-bottom:1px solid var(--line); }
+  .result-table th:first-child,.result-table td:first-child { text-align:left; }
+  .result-table th { color:var(--muted); font-weight:650; }
+  .note { margin-top:11px; color:var(--muted); font-size:.91rem; }
+  .matrix { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin-top:12px; }
+  .matrix div { padding:9px 10px; border:1px solid var(--line); border-radius:5px; background:var(--panel); }
+  .timeline { margin-top:10px; padding-left:0; list-style:none; }
+  .timeline li { padding:0 0 11px 15px; border-left:2px solid #dbe7fa; }
+  .timeline li:last-child { padding-bottom:0; }
+  .timeline strong { display:block; }
+  code { padding:1px 4px; border-radius:3px; color:var(--blue); background:#f1f5fb; font-family:ui-monospace,Consolas,monospace; font-size:.9em; }
+  @media (max-width:760px) { .page { padding:24px 20px 80px; } .contents { max-height:300px; } .matrix { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<input class="lang-control" type="radio" id="language-en" name="activeLanguage">
+<input class="lang-control" type="radio" id="language-zh" name="activeLanguage" checked>
+<main class="page zh">
+  <div class="language"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
+  <h1>Diffusion Model Workspace</h1>
+  <nav class="tabs" aria-label="主要頁籤">
+    <a href="../index.html">研究手冊</a>
+    <a href="research-questions.html">研究問題</a>
+    <a href="diffusion-guide.html">Diffusion.py 教學</a>
+    <a class="active" href="#task-010">任務</a>
+  </nav>
+  <div class="workspace">
+    <aside>
+      <details>
+        <summary>目錄</summary>
+        <nav class="contents" aria-label="任務目錄">
+          <h2>TASKS</h2>
+          <a class="task-link" href="#task-001"><span class="number">001</span>基準比較</a>
+          <a class="task-link" href="#task-002"><span class="number">002</span>非等向 covariance</a>
+          <a class="task-link" href="#task-003"><span class="number">003</span>32D 基準比較</a>
+          <a class="task-link" href="#task-004"><span class="number">004</span>資料量與 mode separation</a>
+          <a class="task-link" href="#task-005"><span class="number">005</span>程式與報告遷移</a>
+          <a class="task-link" href="#task-006"><span class="number">006</span>資料量 replication</a>
+          <a class="task-link" href="#task-007"><span class="number">007</span>32D 指定座標 metric</a>
+          <a class="task-link" href="#task-008"><span class="number">008</span>固定軌跡 anisotropy</a>
+          <a class="task-link" href="#task-009"><span class="number">009</span>Ancestral sampling 文獻</a>
+          <a class="task-link" href="#task-010"><span class="number">010</span>η sweep</a>
+        </nav>
+      </details>
+    </aside>
+    <section aria-live="polite">
+      <article id="task-001">
+        <p class="eyebrow">TASK 001 <span class="status done">已完成</span></p><h2>DDPM、DDIM 與 RF 基準比較</h2>
+        <p class="lead">先建立 2D 8-mode GMM 的共同基準，讓後面的實驗知道每種 sampler 在不同 NFE 下的起點。</p>
+        <section class="section"><h3>問題與設計</h3><p>比較 Rectified Flow、DDPM、DDIM。固定 <code>T=300</code>、NFE = 1, 5, 20, 100、initial noise 與 SWD projection。diffusion 使用 scaled linear β schedule。</p><div class="flow"><span>乾淨 GMM</span><b>→</b><span>訓練 model</span><b>→</b><span>三種 sampler</span><b>→</b><span>SWD</span></div></section>
+        <section class="section"><h3>已得到的結果</h3><table class="result-table"><tr><th>方法</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>2.466</td><td>0.229</td><td>0.090</td><td>0.072</td></tr><tr><td>DDPM</td><td>7.822</td><td>0.383</td><td>0.149</td><td>0.111</td></tr><tr><td>DDIM</td><td>7.822</td><td>0.791</td><td>0.298</td><td>0.228</td></tr></table><p class="note">這是一個執行 run，不是所有問題的一般結論。</p></section>
+        <section class="section"><h3>決策、審查與變更</h3><ul><li>原本未縮放的 schedule 使 terminal SNR 不合理，因此改為 scaled linear β schedule。</li><li>審查確認 <code>s=0</code> posterior、time normalization 與共用 SWD projections 的實作。</li><li>補上 NFE = 1 時 DDPM/DDIM 相等的檢查。</li></ul></section>
+        <section class="section"><h3>目前定位</h3><p>基準實作已通過審查。它提供後續 task 的比較條件，不足以宣稱任一 sampler 永遠較好。</p></section>
+      </article>
+      <article id="task-002">
+        <p class="eyebrow">TASK 002 <span class="status done">已完成</span></p><h2>非等向 covariance</h2>
+        <p class="lead">把每個 GMM mode 拉成有方向性的橢圓，觀察基準結論是否依賴圓形 Gaussian。</p>
+        <section class="section"><h3>問題與設計</h3><p>測試橢圓比例 4 與 9。比例 4 使用 <code>σr=.60, σt=.15</code>，比例 9 使用 <code>σr=.90, σt=.10</code>。兩者的乘積都是 .09，但總變異量不同。</p></section>
+        <section class="section"><h3>結果</h3><p>在 3-seed sweep 中，ratio 4 與 ratio 9 的所有測試 NFE 都是 RF 有最低平均 SWD。</p></section>
+        <section class="section"><h3>決策、審查與變更</h3><ul><li>審查指出這個比較同時改了 anisotropy 與總變異量，不能把結果只解讀成形狀效果。</li><li>因此開出 Task 008，用 2×2 factorial 把兩件事分開。</li><li>內容審查通過，但 task 002 到 004 當時沒有先做設計 gate，之後流程已補回。</li></ul></section>
+      </article>
+      <article id="task-003">
+        <p class="eyebrow">TASK 003 <span class="status done">已完成</span></p><h2>32D 基準比較</h2>
+        <p class="lead">把同一個 8-mode 問題放到 32 維，檢查高維背景座標是否改變比較。</p>
+        <section class="section"><h3>問題與設計</h3><p>前兩維承載 eight modes，其餘 30 維是 zero-mean isotropic noise。使用 all-coordinate SWD。</p></section>
+        <section class="section"><h3>已得到的結果</h3><table class="result-table"><tr><th>方法</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>.494</td><td>.074</td><td>.028</td><td>.023</td></tr><tr><td>DDPM</td><td>7.726</td><td>.130</td><td>.060</td><td>.041</td></tr><tr><td>DDIM</td><td>7.726</td><td>.109</td><td>.050</td><td>.045</td></tr></table></section>
+        <section class="section"><h3>決策、審查與下一步</h3><p>審查通過，但 all-coordinate SWD 可能被 30 個不承載 mode 的維度稀釋。因此 Task 007 會只量前兩個座標，不能直接把 32D 的數字尺度拿去和 2D 比。</p></section>
+      </article>
+      <article id="task-004">
+        <p class="eyebrow">TASK 004 <span class="status done">已完成</span></p><h2>有限資料量與 mode separation</h2>
+        <p class="lead">檢查訓練資料量和 mode 間距是否會改變 sampler 的相對表現。</p>
+        <section class="section"><h3>問題與設計</h3><p>先比較 500 和 5000 筆有限資料，再比較 ring radius 1.5 與 6.0。後續以 3 seeds 重跑關鍵條件。</p></section>
+        <section class="section"><h3>結果如何被修正</h3><p>最初單一 seed 在 radius 6、NFE 20 和 100 看見 DDPM 超過 RF。3-seed replication 後，RF 在 radius 1.5 和 6.0 的所有 NFE 都有最低平均 SWD。原先的 crossing 沒有持續出現。</p></section>
+        <section class="section"><h3>決策、審查與下一步</h3><p>這個修正提醒單一 seed 不足以支持 sampler 排名。Task 006 以四個資料量和三個獨立 datasets 做較完整 replication。</p></section>
+      </article>
+      <article id="task-005">
+        <p class="eyebrow">TASK 005 <span class="status done">已完成</span></p><h2>程式與報告遷移</h2>
+        <p class="lead">把 notebook 的可重現 baseline 拆成可測試的 source、experiment 和 report 結構，notebook 保持 frozen。</p>
+        <section class="section"><h3>做了什麼</h3><div class="flow"><span>notebook baseline</span><b>→</b><span><code>src/</code></span><b>→</b><span><code>experiments/</code></span><b>→</b><span><code>results/</code></span><b>→</b><span><code>report.qmd</code></span></div></section>
+        <section class="section"><h3>審查結果</h3><p>experiment entrypoints 能重現 frozen SWD 到小數第六位，focused tests 通過。審查曾找出 tolerance、seeded anisotropic test、NFE=1 assertion、root <code>conftest</code> 與 requirements pin 的缺口，均已補回。</p></section>
+        <section class="section"><h3>變更紀錄</h3><ul class="timeline"><li><strong>2026-07-22</strong>清理外部 report 的措辭，沒有新增或改寫實驗結論。</li><li><strong>2026-08-19</strong>將任務脈絡集中到本工作區，每一項 task 內記錄它自己的決策、審查和變更。</li></ul></section>
+      </article>
+      <article id="task-006">
+        <p class="eyebrow">TASK 006 <span class="status done">已完成</span></p><h2>資料量 replication</h2>
+        <p class="lead">用更多資料量和獨立資料集重跑有限樣本比較，判斷 Task 004 的結論是否穩定。</p>
+        <section class="section"><h3>問題與設計</h3><p>資料量為 500、1000、2500、5000，每個資料量有 3 個獨立 datasets。每個條件訓練 RF 和 diffusion model，產生 144 筆 raw 結果與 48 筆 aggregate 結果。</p><div class="flow"><span>4 個資料量</span><b>×</b><span>3 個 datasets</span><b>→</b><span>各自訓練</span><b>→</b><span>RF / DDPM / DDIM</span></div></section>
+        <section class="section"><h3>結果</h3><ul><li>NFE 1 時，四個資料量都是 RF 最低。</li><li>500、1000 的較高 NFE 仍是 RF 最低。</li><li>2500 的 NFE 100，以及 5000 的 NFE 5、20、100，DDPM 有較低平均 SWD。</li></ul><p class="note">沒有單調的 data-size 效果，也沒有可泛化的 sampler 排名。</p></section>
+        <section class="section"><h3>決策、審查與變更</h3><p>condition seed 使用 <code>200000 + 10000×size_index + 1000×replication_index</code>，資料集標籤為 201、202、203。不同資料量採獨立 datasets，不是 nested subsets。審查批准，golden results 已凍結。</p></section>
+      </article>
+      <article id="task-007">
+        <p class="eyebrow">TASK 007 <span class="status proposed">已設計，未執行</span></p><h2>32D 指定座標 metric</h2>
+        <p class="lead">確認 Task 003 的高維 SWD 是否把真正承載 mode 的前兩維誤差稀釋掉。</p>
+        <section class="section"><h3>設計</h3><p>同一套 32D samples 分別計算 all-coordinate SWD 與前兩維 SWD。sample 要以原本 seed 重生，不另外儲存 samples。</p></section>
+        <section class="section"><h3>已做的決策</h3><p>設計已審查。執行暫停，等 Sahani 對既有結果的意見後，再決定是否值得做這個診斷。</p></section>
+      </article>
+      <article id="task-008">
+        <p class="eyebrow">TASK 008 <span class="status proposed">已設計，未執行</span></p><h2>固定軌跡的 anisotropy control</h2>
+        <p class="lead">把 Task 002 混在一起的 shape 與 total variance 拆開，才知道是哪一個因素影響結果。</p>
+        <section class="section"><h3>設計</h3><p>2×2 factorial：<code>ρ ∈ {4, 9}</code>，<code>S ∈ {.3825, .8200}</code>。每個 cell 用 <code>σt = √(S / (ρ² + 1))</code>、<code>σr = ρσt</code> 建立 covariance。</p><div class="matrix"><div>A　ρ=4，S=.3825<br>Task 002 已有</div><div>B　ρ=9，S=.3825<br>需新跑</div><div>C　ρ=4，S=.8200<br>需新跑</div><div>D　ρ=9，S=.8200<br>Task 002 已有</div></div></section>
+        <section class="section"><h3>審查後的修正</h3><ul><li>程式直接依公式計算 covariance，不硬編碼四捨五入值。</li><li>跨 scale 比較時加入 <code>SWD / √S</code>。</li><li>不再把 determinant 固定當成設計條件。</li></ul></section>
+        <section class="section"><h3>目前狀態</h3><p>設計已通過審查，依 2026-07-22 的決策，先把既有結果交給 Sahani，再決定是否執行新 controls。</p></section>
+      </article>
+      <article id="task-009">
+        <p class="eyebrow">TASK 009 <span class="status done">文獻部分完成</span></p><h2>Ancestral sampling 為何可能有幫助</h2>
+        <p class="lead">整理 DDPM 的 stochastic reverse sampling 和 DDIM deterministic sampling 之間的理論與實驗差異。</p>
+        <section class="section"><h3>文獻的出發點</h3><p>DDIM 的 η 將 <code>η=0</code> 的 deterministic DDIM 連到 <code>η=1</code> 的 DDPM。DDIM 論文的 CIFAR truncated sampling 結果中，η 增加時 FID 變差，這和本專案 2D GMM 的觀察方向相反。</p></section>
+        <section class="section"><h3>本專案的假說</h3><p>這個平滑 2D 問題可能不是由數值離散誤差主導，而是由 learned score 的近似誤差主導。每一步新增的隨機性可能減少已累積的偏移。這是推論，還不是已建立的因果結論。</p></section>
+        <section class="section"><h3>接下來的證據</h3><p>先做 oracle score control，再由 Task 010 的 η sweep 檢查中間 η 是否呈現有結構的變化。</p></section>
+      </article>
+      <article id="task-010">
+        <p class="eyebrow">TASK 010 <span class="status active-status">結果已凍結，task 文件待回寫</span></p><h2>η sweep</h2>
+        <p class="lead">固定 model 與噪聲，只改變 reverse sampling 中的隨機程度，量測 η 如何改變 SWD。</p>
+        <section class="section"><h3>問題與設計</h3><p><code>η=0</code> 是 DDIM，<code>η=1</code> 應與 DDPM 相符。比較 η = 0、.25、.5、.75、1 與 <code>sigma_hat</code>。每個 setting 使用同一個 model、true GMM samples 與 initial noise。</p><div class="flow"><span>η=0<br>DDIM</span><b>→</b><span>.25</span><b>→</b><span>.5</span><b>→</b><span>.75</span><b>→</b><span>η=1<br>DDPM</span></div></section>
+        <section class="section"><h3>凍結結果</h3><table class="result-table"><tr><th>setting</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>η=0</td><td>7.420</td><td>.774</td><td>.319</td><td>.237</td></tr><tr><td>η=.25</td><td>7.420</td><td>.748</td><td>.288</td><td>.214</td></tr><tr><td>η=.5</td><td>7.420</td><td>.683</td><td>.236</td><td>.167</td></tr><tr><td>η=.75</td><td>7.420</td><td>.567</td><td>.140</td><td>.128</td></tr><tr><td>η=1</td><td>7.420</td><td>.363</td><td>.107</td><td>.112</td></tr><tr><td>sigma_hat</td><td>7.420</td><td>.327</td><td>.111</td><td>.112</td></tr></table><p class="note">在這個受控制條件中，NFE 大於 1 時 SWD 隨 η 增加而下降。這不是對所有資料或模型的結論。</p></section>
+        <section class="section"><h3>必要檢查</h3><ul><li><code>η=0</code> 的 samples 必須與 DDIM reference 完全相等。</li><li><code>η=1</code> 的 samples 必須與 DDPM reference 在數值容忍範圍內相同。</li><li>NFE = 1 時所有 setting 應相同。</li></ul></section>
+        <section class="section"><h3>狀態說明與下一步</h3><p>目前 <code>experiments/eta_sweep.py</code> 已有 golden results 和上述檢查。原 task Markdown 仍標示進行中，尚未回寫為完成。<code>sigma_hat</code> 在低 NFE 沒有崩壞是待解釋的問題，oracle score control 是下一個判別證據。</p></section>
+      </article>
+    </section>
+  </div>
+</main>
+<main class="page en">
+  <div class="language"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
+  <h1>Diffusion Model Workspace</h1>
+  <nav class="tabs" aria-label="Main tabs">
+    <a href="../index.html">Handbook</a>
+    <a href="research-questions.html">Research questions</a>
+    <a href="diffusion-guide.html">Diffusion.py guide</a>
+    <a class="active" href="#task-010">Tasks</a>
+  </nav>
+  <div class="workspace">
+    <aside><details><summary>CONTENTS</summary><nav class="contents" aria-label="Task contents">
+      <h2>TASKS</h2>
+      <a class="task-link" href="#task-001"><span class="number">001</span>Baseline comparison</a>
+      <a class="task-link" href="#task-002"><span class="number">002</span>Anisotropic covariance</a>
+      <a class="task-link" href="#task-003"><span class="number">003</span>32D baseline</a>
+      <a class="task-link" href="#task-004"><span class="number">004</span>Data size and mode separation</a>
+      <a class="task-link" href="#task-005"><span class="number">005</span>Code and report migration</a>
+      <a class="task-link" href="#task-006"><span class="number">006</span>Data-size replication</a>
+      <a class="task-link" href="#task-007"><span class="number">007</span>32D coordinate metric</a>
+      <a class="task-link" href="#task-008"><span class="number">008</span>Fixed-trace anisotropy</a>
+      <a class="task-link" href="#task-009"><span class="number">009</span>Ancestral-sampling literature</a>
+      <a class="task-link" href="#task-010"><span class="number">010</span>Eta sweep</a>
+    </nav></details></aside>
+    <section aria-live="polite">
+      <article id="task-001"><p class="eyebrow">TASK 001 <span class="status done">Complete</span></p><h2>DDPM, DDIM, and RF baseline</h2><p class="lead">Create one common 2D 8-mode GMM benchmark before testing any geometry or data changes.</p><section class="section"><h3>Question and design</h3><p>Compare Rectified Flow, DDPM, and DDIM with <code>T=300</code>, NFE 1, 5, 20, and 100, shared initial noise, and shared SWD projections. Diffusion uses a scaled linear beta schedule.</p></section><section class="section"><h3>Recorded result</h3><table class="result-table"><tr><th>Method</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>2.466</td><td>.229</td><td>.090</td><td>.072</td></tr><tr><td>DDPM</td><td>7.822</td><td>.383</td><td>.149</td><td>.111</td></tr><tr><td>DDIM</td><td>7.822</td><td>.791</td><td>.298</td><td>.228</td></tr></table><p class="note">This is one recorded run, not a general ranking.</p></section><section class="section"><h3>Decision and review</h3><p>The unscaled schedule had unsuitable terminal SNR, so the scaled schedule replaced it. Review checked the <code>s=0</code> posterior, time normalization, shared projections, and the NFE 1 DDPM/DDIM equality check.</p></section></article>
+      <article id="task-002"><p class="eyebrow">TASK 002 <span class="status done">Complete</span></p><h2>Anisotropic covariance</h2><p class="lead">Turn circular GMM components into oriented ellipses to test whether the baseline depends on isotropic Gaussians.</p><section class="section"><h3>Design and result</h3><p>Ratios 4 and 9 used <code>(σr, σt)=(.60,.15)</code> and <code>(.90,.10)</code>. Across the three-seed sweeps, RF had the lowest mean SWD at every tested NFE.</p></section><section class="section"><h3>Review consequence</h3><p>The comparison changed anisotropy and total variance together, so it cannot isolate shape. Task 008 was opened as a 2×2 control.</p></section></article>
+      <article id="task-003"><p class="eyebrow">TASK 003 <span class="status done">Complete</span></p><h2>32D baseline</h2><p class="lead">Embed the eight modes in the first two coordinates of a 32D target.</p><section class="section"><h3>Design</h3><p>The remaining 30 coordinates are zero-mean isotropic noise. The recorded metric is all-coordinate SWD.</p></section><section class="section"><h3>Decision and next action</h3><p>Review approved the implementation but identified projection dilution as a risk. Task 007 will compare this metric with SWD over only the two mode-bearing coordinates.</p></section></article>
+      <article id="task-004"><p class="eyebrow">TASK 004 <span class="status done">Complete</span></p><h2>Finite data and mode separation</h2><p class="lead">Test whether training-set size and distance between modes change relative sampler quality.</p><section class="section"><h3>Result revision</h3><p>An early single-seed radius-6 run showed DDPM ahead at NFE 20 and 100. In the three-seed replication, RF had the lowest mean at every NFE for radii 1.5 and 6.0. The crossing did not persist.</p></section><section class="section"><h3>Next action</h3><p>This made a larger finite-data replication necessary, which became Task 006.</p></section></article>
+      <article id="task-005"><p class="eyebrow">TASK 005 <span class="status done">Complete</span></p><h2>Code and report migration</h2><p class="lead">Move the reproducible notebook baseline into testable source, experiment, result, and report modules while keeping the notebook frozen.</p><section class="section"><h3>Review result</h3><p>Entrypoints reproduced frozen SWD to six decimals. Review recovered missing tolerance, seeded anisotropic test, NFE 1 assertion, root <code>conftest</code>, and requirements pins.</p></section></article>
+      <article id="task-006"><p class="eyebrow">TASK 006 <span class="status done">Complete</span></p><h2>Data-size replication</h2><p class="lead">Repeat the finite-data comparison with four sizes and independent datasets.</p><section class="section"><h3>Design</h3><p>Sizes 500, 1000, 2500, and 5000 each have three independent datasets. This produces 144 raw and 48 aggregate results.</p></section><section class="section"><h3>Result</h3><p>RF is lowest at NFE 1 for every size and at higher NFE for 500 and 1000. DDPM is lower at NFE 100 for 2500, and at NFE 5, 20, and 100 for 5000. There is no monotone data-size effect or general sampler ranking.</p></section></article>
+      <article id="task-007"><p class="eyebrow">TASK 007 <span class="status proposed">Designed, not run</span></p><h2>32D coordinate-specific metric</h2><p class="lead">Check whether all-coordinate SWD hides error on the two coordinates that actually carry the modes.</p><section class="section"><h3>Design and status</h3><p>Compute all-coordinate SWD and first-two-coordinate SWD on samples regenerated with the same seeds. The design is reviewed; execution waits for Sahani feedback on existing results.</p></section></article>
+      <article id="task-008"><p class="eyebrow">TASK 008 <span class="status proposed">Designed, not run</span></p><h2>Fixed-trace anisotropy control</h2><p class="lead">Separate the shape and total-variance changes that were confounded in Task 002.</p><section class="section"><h3>Design</h3><p>Use <code>ρ ∈ {4,9}</code> and <code>S ∈ {.3825,.8200}</code>, with <code>σt=√(S/(ρ²+1))</code> and <code>σr=ρσt</code>.</p></section><section class="section"><h3>Review and status</h3><p>Compute covariance from the formula, compare cross-scale results with <code>SWD/√S</code>, and do not hold determinant fixed. The task waits until the existing results have been sent to Sahani.</p></section></article>
+      <article id="task-009"><p class="eyebrow">TASK 009 <span class="status done">Literature pass complete</span></p><h2>Why ancestral sampling might help</h2><p class="lead">Relate DDPM stochastic sampling to DDIM deterministic sampling.</p><section class="section"><h3>Literature and project hypothesis</h3><p>DDIM uses eta to interpolate from deterministic DDIM at zero to DDPM at one. The DDIM CIFAR truncated-sampling result moves in the opposite direction from this project's 2D GMM finding. One hypothesis is that learned-score approximation error, not discretization error, dominates here. This is an inference, not a causal conclusion.</p></section><section class="section"><h3>Next evidence</h3><p>Use an oracle-score control and the eta sweep in Task 010.</p></section></article>
+      <article id="task-010"><p class="eyebrow">TASK 010 <span class="status active-status">Results frozen, task record pending</span></p><h2>Eta sweep</h2><p class="lead">Hold the model and starting noise fixed, and vary only reverse-process stochasticity.</p><section class="section"><h3>Design</h3><p><code>eta=0</code> is DDIM and <code>eta=1</code> should match DDPM. Compare eta 0, .25, .5, .75, 1, and <code>sigma_hat</code>.</p></section><section class="section"><h3>Frozen result</h3><p>For NFE above 1, SWD falls as eta increases in this controlled run. The eta 0 sample equals the DDIM reference, eta 1 matches the DDPM reference within numerical tolerance, and all settings agree at NFE 1.</p></section><section class="section"><h3>Open question</h3><p>Why <code>sigma_hat</code> does not collapse at low NFE remains unexplained. Oracle-score control is the next discriminating evidence.</p></section></article>
+    </section>
+  </div>
+</main>
+<script>
+  const links = [...document.querySelectorAll('.task-link')];
+  const tasks = [...document.querySelectorAll('article')];
+  function showTask(id) {
+    const selected = tasks.some((task) => task.id === id) ? id : 'task-010';
+    tasks.forEach((task) => task.classList.toggle('active', task.id === selected));
+    links.forEach((link) => link.classList.toggle('current', link.getAttribute('href') === `#${selected}`));
+  }
+  window.addEventListener('hashchange', () => showTask(location.hash.slice(1)));
+  showTask(location.hash.slice(1));
+</script>
+</body>
+</html>

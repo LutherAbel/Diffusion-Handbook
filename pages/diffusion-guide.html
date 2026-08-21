@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffusion.py Guide</title>
+<style>
+  :root { --bg:#fafafa; --fg:#1f2328; --muted:#57606a; --card:#fff; --border:#d0d7de; --accent:#0969da; --ok:#1a7f37; }
+  @media (prefers-color-scheme:dark) { :root { --bg:#16181d; --fg:#e6e6e6; --muted:#9aa0a6; --card:#20242b; --border:#3a3f47; --accent:#6cb2ff; --ok:#4cc36a; } }
+  * { box-sizing:border-box; }
+  body { margin:0 auto; max-width:880px; padding:24px 20px 80px; background:var(--bg); color:var(--fg); font-family:"Segoe UI","Microsoft JhengHei",system-ui,sans-serif; line-height:1.65; }
+  h1 { font-size:1.6em; margin-bottom:4px; }
+  h2 { font-size:1.2em; margin-top:2em; border-bottom:2px solid var(--border); padding-bottom:6px; }
+  h3 { font-size:1.02em; margin-bottom:4px; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .meta,.note { color:var(--muted); font-size:.9em; }
+  .nav,.language-switch { display:flex; flex-wrap:wrap; gap:6px 12px; margin:12px 0 20px; font-size:.9em; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 18px; margin:10px 0; }
+  .status { border-left:4px solid var(--ok); }
+  .flow { display:block; width:100%; margin:12px 0 20px; border:1px solid var(--border); background:var(--card); }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; min-width:760px; border-collapse:collapse; margin:10px 0; font-size:.94em; background:var(--card); }
+  th,td { border:1px solid var(--border); padding:7px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--card); }
+  code { background:var(--bg); padding:1px 6px; border-radius:4px; white-space:nowrap; }
+  .templates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+  pre { overflow-x:auto; margin:8px 0 0; padding:10px; border-radius:6px; background:#1f2933; color:#f4f7fa; font-size:.8em; line-height:1.45; }
+  pre code { padding:0; background:transparent; color:inherit; white-space:pre; }
+  .lang-control { position:absolute; opacity:0; pointer-events:none; }
+  .language-switch label { cursor:pointer; color:var(--accent); padding:2px 8px; border:1px solid var(--border); border-radius:999px; }
+  #language-en:checked ~ .en, #language-zh:checked ~ .zh { display:block; }
+  #language-en:checked ~ .zh, #language-zh:checked ~ .en { display:none; }
+  #language-en:checked ~ .en .language-switch label[for="language-en"], #language-zh:checked ~ .zh .language-switch label[for="language-zh"] { color:var(--fg); background:var(--card); border-color:var(--accent); font-weight:650; }
+  @media (max-width:720px) { .templates { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<input class="lang-control" type="radio" id="language-en" name="activeLanguage" checked>
+<input class="lang-control" type="radio" id="language-zh" name="activeLanguage">
+<main class="en">
+  <div class="language-switch"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
+  <h1>Diffusion.py Guide</h1>
+  <div class="meta">How the 13 primary functions and classes in <code>src/diffusion.py</code> form one system.</div>
+  <nav class="nav"><a href="../index.html">Handbook</a><a href="research-questions.html">Research questions</a><b>Diffusion.py guide</b><a href="tasks.html">Tasks</a></nav>
+
+  <div class="card status"><p><b>Core idea:</b> training creates noisy examples with known noise. Sampling asks the trained model to estimate that noise and repeatedly moves from random noise toward generated data.</p></div>
+
+  <h2>How the pieces connect</h2>
+  <svg class="flow" viewBox="0 0 840 250" role="img" aria-label="Diffusion training and sampling flow">
+    <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#57606a"/></marker></defs>
+    <style>.box{fill:#fff;stroke:#0969da;stroke-width:2}.label{font:600 15px Segoe UI,sans-serif;fill:#1f2328}.sub{font:13px Segoe UI,sans-serif;fill:#57606a}.line{stroke:#57606a;stroke-width:2;marker-end:url(#arrow)}</style>
+    <rect class="box" x="20" y="40" width="130" height="62" rx="6"/><text class="label" x="85" y="68" text-anchor="middle">clean x0</text><text class="sub" x="85" y="88" text-anchor="middle">GMM sample</text>
+    <line class="line" x1="150" y1="71" x2="205" y2="71"/>
+    <rect class="box" x="205" y="40" width="150" height="62" rx="6"/><text class="label" x="280" y="68" text-anchor="middle">noisy xt</text><text class="sub" x="280" y="88" text-anchor="middle">make batch</text>
+    <line class="line" x1="355" y1="71" x2="410" y2="71"/>
+    <rect class="box" x="410" y="40" width="180" height="62" rx="6"/><text class="label" x="500" y="68" text-anchor="middle">NoisePredictorMLP</text><text class="sub" x="500" y="88" text-anchor="middle">model(xt, t)</text>
+    <line class="line" x1="590" y1="71" x2="645" y2="71"/>
+    <rect class="box" x="645" y="40" width="170" height="62" rx="6"/><text class="label" x="730" y="68" text-anchor="middle">predicted noise</text><text class="sub" x="730" y="88" text-anchor="middle">eps_hat</text>
+    <line class="line" x1="730" y1="102" x2="730" y2="155"/>
+    <rect class="box" x="570" y="155" width="245" height="62" rx="6"/><text class="label" x="692" y="183" text-anchor="middle">DDIM / DDPM update</text><text class="sub" x="692" y="203" text-anchor="middle">xt to x0_hat to xs</text>
+    <text class="sub" x="20" y="145">Training learns eps_hat. Sampling repeats the reverse update until s = 0.</text>
+  </svg>
+
+  <h2>What each function contributes</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Stage</th><th>Function or class</th><th>Job</th><th>Connects to</th></tr>
+    <tr><td>Schedule</td><td><code>make_diffusion_schedule</code></td><td>Build beta, alpha, and cumulative alpha_bar coefficients.</td><td>Batch creation, training, and every sampler.</td></tr>
+    <tr><td>Schedule</td><td><code>make_sampling_timesteps</code></td><td>Select descending reverse steps for the requested NFE.</td><td>DDIM, DDPM, eta, and sigma-hat samplers.</td></tr>
+    <tr><td>Model</td><td><code>NoisePredictorMLP</code></td><td>Predict the noise inside x_t from x_t and time t.</td><td>Training loss and clean-sample estimation.</td></tr>
+    <tr><td>Batch</td><td><code>make_diffusion_batch</code></td><td>Add known Gaussian noise to clean GMM samples.</td><td><code>train_diffusion_model</code>.</td></tr>
+    <tr><td>Training</td><td><code>train_diffusion_model</code></td><td>Train the noise predictor on freshly sampled GMM data.</td><td>A trained model shared by reverse samplers.</td></tr>
+    <tr><td>Posterior</td><td><code>ddpm_jump_posterior</code></td><td>Compute the mean and variance for a jump from t to s.</td><td>DDPM, eta, and sigma-hat samplers.</td></tr>
+    <tr><td>Sampling</td><td><code>sample_ddim</code></td><td>Apply the deterministic reverse update.</td><td>Generated samples for evaluation.</td></tr>
+    <tr><td>Sampling</td><td><code>sample_eta</code></td><td>Control how much fresh reverse-process noise is added.</td><td>Eta sweep between DDIM and DDPM-style sampling.</td></tr>
+    <tr><td>Sampling</td><td><code>sample_sigma_hat</code></td><td>Use the larger sigma-hat variance choice.</td><td>Ancestral-sampling control.</td></tr>
+    <tr><td>Sampling</td><td><code>sample_ddpm</code></td><td>Sample from the respaced jump posterior with ancestral noise.</td><td>Generated samples for evaluation.</td></tr>
+    <tr><td>Anisotropic batch</td><td><code>make_anisotropic_diffusion_batch</code></td><td>Create noisy examples from anisotropic GMM components.</td><td><code>train_anisotropic_diffusion_model</code>.</td></tr>
+    <tr><td>Anisotropic training</td><td><code>train_anisotropic_diffusion_model</code></td><td>Train the same predictor on anisotropic targets.</td><td>An anisotropic experiment model.</td></tr>
+    <tr><td>Finite-data training</td><td><code>train_diffusion_model_on_dataset</code></td><td>Train from a fixed finite dataset instead of fresh GMM draws.</td><td>A finite-data experiment model.</td></tr>
+  </table></div>
+
+  <h2>Three templates to recognise</h2>
+  <div class="templates">
+    <div class="card"><h3>Schedule</h3><pre><code>coefficients = build_schedule(...)
+alpha_bar_t = coefficients[t]
+result = formula(alpha_bar_t, x)</code></pre></div>
+    <div class="card"><h3>Training</h3><pre><code>prediction = model(inputs)
+loss = compare(prediction, target)
+optimizer.zero_grad()
+loss.backward()
+optimizer.step()</code></pre></div>
+    <div class="card"><h3>Sampling</h3><pre><code>model.eval()
+for t, s in reverse_steps:
+    eps_hat = model(x, t)
+    x0_hat = estimate_clean(...)
+    x = reverse_update(...)</code></pre></div>
+  </div>
+</main>
+<main class="zh">
+  <div class="language-switch"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
+  <h1>Diffusion.py 教學</h1>
+  <div class="meta"><code>src/diffusion.py</code> 的 13 個主要函式與類別如何組成一個系統。</div>
+  <nav class="nav"><a href="../index.html">研究手冊</a><a href="research-questions.html">研究問題</a><b>Diffusion.py 教學</b><a href="tasks.html">任務</a></nav>
+  <div class="card status"><p><b>核心概念：</b>訓練時，先在乾淨資料上加入我們知道的雜訊。sampling 時，讓訓練好的 model 猜回那份雜訊，再反覆從 random noise 往生成資料移動。</p></div>
+  <h2>這些東西怎麼連起來</h2>
+  <div class="card"><p><code>clean x0</code> 的 GMM sample 經過 <code>make_diffusion_batch</code> 變成 <code>noisy xt</code>。<code>NoisePredictorMLP(xt, t)</code> 預測 noise <code>eps_hat</code>。訓練時，預測值和已知 noise 比較。sampling 時，用 <code>eps_hat</code> 估計 <code>x0_hat</code>，再由 DDIM 或 DDPM update 得到下一個 <code>xs</code>，直到 <code>s=0</code>。</p></div>
+  <h2>每個函式負責什麼</h2>
+  <div class="table-wrap"><table>
+    <tr><th>階段</th><th>函式或類別</th><th>工作</th><th>連到哪裡</th></tr>
+    <tr><td>Schedule</td><td><code>make_diffusion_schedule</code></td><td>建立 beta、alpha、累積 alpha_bar。</td><td>batch、training 與所有 sampler。</td></tr>
+    <tr><td>Schedule</td><td><code>make_sampling_timesteps</code></td><td>依 NFE 選擇由大到小的 reverse steps。</td><td>DDIM、DDPM、eta、sigma-hat。</td></tr>
+    <tr><td>Model</td><td><code>NoisePredictorMLP</code></td><td>由 <code>xt</code> 與時間 <code>t</code> 預測其中的 noise。</td><td>training loss 與 clean-sample estimate。</td></tr>
+    <tr><td>Batch</td><td><code>make_diffusion_batch</code></td><td>把已知 Gaussian noise 加到乾淨 GMM sample。</td><td><code>train_diffusion_model</code>。</td></tr>
+    <tr><td>Training</td><td><code>train_diffusion_model</code></td><td>用新抽的 GMM data 訓練 noise predictor。</td><td>所有 reverse sampler 共用的 trained model。</td></tr>
+    <tr><td>Posterior</td><td><code>ddpm_jump_posterior</code></td><td>計算從 <code>t</code> 跳到 <code>s</code> 的 mean 與 variance。</td><td>DDPM、eta、sigma-hat sampler。</td></tr>
+    <tr><td>Sampling</td><td><code>sample_ddim</code></td><td>執行 deterministic reverse update。</td><td>用於 evaluation 的 generated samples。</td></tr>
+    <tr><td>Sampling</td><td><code>sample_eta</code></td><td>控制 reverse process 新加入多少 fresh noise。</td><td>DDIM 和 DDPM-style sampling 之間的 eta sweep。</td></tr>
+    <tr><td>Sampling</td><td><code>sample_sigma_hat</code></td><td>採用較大的 sigma-hat variance。</td><td>ancestral-sampling control。</td></tr>
+    <tr><td>Sampling</td><td><code>sample_ddpm</code></td><td>從 respaced jump posterior 抽 ancestral noise。</td><td>用於 evaluation 的 generated samples。</td></tr>
+    <tr><td>非等向 batch</td><td><code>make_anisotropic_diffusion_batch</code></td><td>由非等向 GMM components 建立 noisy examples。</td><td><code>train_anisotropic_diffusion_model</code>。</td></tr>
+    <tr><td>非等向 training</td><td><code>train_anisotropic_diffusion_model</code></td><td>在非等向 target 上訓練同一個 predictor。</td><td>anisotropic experiment model。</td></tr>
+    <tr><td>有限資料 training</td><td><code>train_diffusion_model_on_dataset</code></td><td>從固定 finite dataset 訓練，不每次重新抽 GMM。</td><td>finite-data experiment model。</td></tr>
+  </table></div>
+  <h2>三個可以辨認的程式模板</h2>
+  <div class="templates">
+    <div class="card"><h3>Schedule</h3><pre><code>coefficients = build_schedule(...)
+alpha_bar_t = coefficients[t]
+result = formula(alpha_bar_t, x)</code></pre></div>
+    <div class="card"><h3>Training</h3><pre><code>prediction = model(inputs)
+loss = compare(prediction, target)
+optimizer.zero_grad()
+loss.backward()
+optimizer.step()</code></pre></div>
+    <div class="card"><h3>Sampling</h3><pre><code>model.eval()
+for t, s in reverse_steps:
+    eps_hat = model(x, t)
+    x0_hat = estimate_clean(...)
+    x = reverse_update(...)</code></pre></div>
+  </div>
+</main>
+</body>
+</html>
