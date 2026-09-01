@@ -10,15 +10,9 @@
   html { scroll-behavior:smooth; }
   body { margin:0; background:var(--paper); color:var(--ink); font-family:"Segoe UI","Microsoft JhengHei",system-ui,sans-serif; line-height:1.72; }
   .page { max-width:880px; min-height:100vh; margin:0 auto; padding:24px 20px 80px; }
-  .language { display:flex; flex-wrap:wrap; gap:6px 12px; margin:12px 0 20px; font-size:.9em; }
-  .language label { display:inline-block; cursor:pointer; padding:2px 8px; border:1px solid var(--line); border-radius:999px; color:var(--blue); font-size:1em; font-weight:400; }
-  .lang-control { position:absolute; opacity:0; pointer-events:none; }
-  #language-en:checked ~ .en, #language-zh:checked ~ .zh { display:block; }
-  #language-en:checked ~ .zh, #language-zh:checked ~ .en { display:none; }
-  #language-en:checked ~ .en .language label[for="language-en"], #language-zh:checked ~ .zh .language label[for="language-zh"] { background:var(--blue-soft); }
-  h1 { margin:0 0 4px; font-size:1.6em; letter-spacing:0; }
+  h1 { margin:0 0 4px; font-size:1.6em; }
   .tabs { display:flex; flex-wrap:wrap; gap:6px 12px; margin:12px 0 20px; font-size:.9em; }
-  .tabs a { padding:0; color:var(--blue); text-decoration:none; }
+  .tabs a { color:var(--blue); text-decoration:none; }
   .tabs .active { color:var(--ink); font-weight:700; }
   .workspace { display:block; margin-top:12px; }
   aside { position:static; }
@@ -58,368 +52,135 @@
 </style>
 </head>
 <body>
-<input class="lang-control" type="radio" id="language-en" name="activeLanguage">
-<input class="lang-control" type="radio" id="language-zh" name="activeLanguage" checked>
-<main class="page zh">
-  <div class="language"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
+<main class="page">
   <h1>Diffusion Model Workspace</h1>
   <nav class="tabs" aria-label="主要頁籤">
     <a href="../index.html">研究手冊</a>
     <a href="research-questions.html">研究問題</a>
     <a href="diffusion-guide.html">Diffusion.py 教學</a>
-    <a class="active" href="#task-011">任務</a>
+    <a class="active" href="#task-007">任務</a>
   </nav>
+
   <div class="workspace">
     <aside><details><summary>目錄</summary><nav class="contents" aria-label="任務目錄">
       <h2>TASKS</h2>
-      <a class="task-link" href="#task-001"><span class="number">001</span>基準比較</a>
-      <a class="task-link" href="#task-002"><span class="number">002</span>非等向 covariance</a>
-      <a class="task-link" href="#task-003"><span class="number">003</span>32D 基準比較</a>
-      <a class="task-link" href="#task-004"><span class="number">004</span>資料量與 mode separation</a>
-      <a class="task-link" href="#task-005"><span class="number">005</span>程式與報告遷移</a>
-      <a class="task-link" href="#task-006"><span class="number">006</span>資料量 replication</a>
-      <a class="task-link" href="#task-007"><span class="number">007</span>32D 指定座標 metric</a>
-      <a class="task-link" href="#task-008"><span class="number">008</span>固定 variance anisotropy</a>
-      <a class="task-link" href="#task-009"><span class="number">009</span>Ancestral sampling 文獻</a>
-      <a class="task-link" href="#task-010"><span class="number">010</span>η sweep</a>
-      <a class="task-link" href="#task-011"><span class="number">011</span>誤差分解 controls</a>
+      <a class="task-link" href="#task-001"><span class="number">001</span>Baseline comparison</a>
+      <a class="task-link" href="#task-002"><span class="number">002</span>Anisotropic covariance</a>
+      <a class="task-link" href="#task-003"><span class="number">003</span>32D + metric validation</a>
+      <a class="task-link" href="#task-004"><span class="number">004</span>Finite data + replication</a>
+      <a class="task-link" href="#task-005"><span class="number">005</span>Controlled anisotropy</a>
+      <a class="task-link" href="#task-006"><span class="number">006</span>Stochasticity / η / oracle</a>
+      <a class="task-link" href="#task-007"><span class="number">007</span>Prior mismatch</a>
     </nav></details></aside>
+
     <section aria-live="polite">
       <article id="task-001">
-        <p class="eyebrow">TASK 001 <span class="status done">已完成</span></p><h2>DDPM、DDIM 與 RF 基準比較</h2>
+        <p class="eyebrow">TASK 001 <span class="status done">已完成</span></p><h2>DDPM、DDIM 與 RF baseline</h2>
         <div class="experiment-card">
           <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">在同一個簡單 2D GMM、相同 NFE budget 下，RF、DDPM 和 deterministic DDIM 的 sampling quality 差多少？</p></div>
           <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Sampler：RF / DDPM / DDIM；NFE：1 / 5 / 20 / 100。</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">同一個 2D 8-mode GMM（radius 4、component std .30）、同一組 exact target samples、同一組 initial noise、同一組 SWD projections。RF 與 diffusion 都訓練 3000 steps；diffusion 使用 <code>T=300</code> 的 scaled linear β schedule。</p></div>
+          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">同一個 2D 8-mode GMM（radius 4、component std .30）、exact target samples、initial noise、SWD projections。RF 與 diffusion 都訓練 3000 steps；diffusion 使用 <code>T=300</code> scaled linear β schedule。</p></div>
           <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Generated samples 與 exact GMM samples 的 Sliced Wasserstein Distance (SWD)。越低越好。</p></div>
           <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">這個 baseline run 中，RF 在所有測試 NFE 都有最低 SWD。NFE 5、20、100 時 DDPM 低於 DDIM；NFE 1 時 DDPM 與 DDIM 相同。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">先建立後續實驗的起點。這個結果只能描述這個 controlled 2D setting，不能單靠它說 RF 一般而言比較好，也還不能解釋 sampler 差異從哪個 mechanism 來。</p></div>
+          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">建立後續實驗的共同起點。這只能描述目前 controlled 2D setting，不能單靠它說 RF 一般而言比較好，也不能解釋差異來自哪個 mechanism。</p></div>
           <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/baseline_2d.py" target="_blank" rel="noopener">experiments/baseline_2d.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/baseline_2d.csv" target="_blank" rel="noopener">baseline_2d.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/baseline_2d_swd.png" target="_blank" rel="noopener">baseline_2d_swd.png</a></div><table class="result-table"><tr><th>方法</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>2.466</td><td>0.229</td><td>0.090</td><td>0.072</td></tr><tr><td>DDPM</td><td>7.822</td><td>0.383</td><td>0.149</td><td>0.111</td></tr><tr><td>DDIM</td><td>7.822</td><td>0.791</td><td>0.298</td><td>0.228</td></tr></table><p class="note">Implementation note: 原本未縮放的 schedule 因 terminal SNR 不合適而被換掉。現在的 baseline 使用 scaled schedule。</p></div></div>
+          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/baseline_2d.csv" target="_blank" rel="noopener">baseline_2d.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/baseline_2d_swd.png" target="_blank" rel="noopener">baseline_2d_swd.png</a></div><table class="result-table"><tr><th>方法</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>2.466</td><td>.229</td><td>.090</td><td>.072</td></tr><tr><td>DDPM</td><td>7.822</td><td>.383</td><td>.149</td><td>.111</td></tr><tr><td>DDIM</td><td>7.822</td><td>.791</td><td>.298</td><td>.228</td></tr></table></div></div>
         </div>
       </article>
 
       <article id="task-002">
-        <p class="eyebrow">TASK 002 <span class="status done">已完成</span></p><h2>非等向 covariance</h2>
+        <p class="eyebrow">TASK 002 <span class="status done">已完成</span></p><h2>Anisotropic covariance</h2>
         <div class="experiment-card">
           <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">把每個 Gaussian component 從圓形拉成有方向的橢圓後，Task 001 的 sampler ranking 還會不會維持？</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Target covariance：ratio 4 使用 <code>σr=.60, σt=.15</code>；ratio 9 使用 <code>σr=.90, σt=.10</code>。同時比較 RF / DDPM / DDIM 與 NFE 1 / 5 / 20 / 100，並用 3 個 training seeds 重跑。</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">2D、8 modes、radius 4、3000 training steps、同一套 diffusion schedule。每個 target / seed 內，三個 samplers 共用 exact target samples、initial noise 和 SWD projection seeds。</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">3 個 seeds 的 mean SWD ± standard deviation。越低越好。</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">ratio 4 和 ratio 9 兩個設定中，RF 在 NFE 1、5、20、100 都有最低 mean SWD。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">Task 001 的 RF ranking 在這兩個 anisotropic targets 上仍然出現，但這不能被解讀成「只增加 anisotropy 也不會改變 ranking」。ratio 4 和 ratio 9 除了 anisotropy 不同，total variance 也從 <code>.3825</code> 變成 <code>.8200</code>，所以 shape effect 和 scale effect 混在一起。Task 008 就是為了把這兩件事拆開。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/anisotropic.py" target="_blank" rel="noopener">experiments/anisotropic.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/anisotropic_ratio_4.csv" target="_blank" rel="noopener">anisotropic_ratio_4.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/anisotropic_ratio_9.csv" target="_blank" rel="noopener">anisotropic_ratio_9.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/anisotropic_ratio_4_swd.png" target="_blank" rel="noopener">ratio 4 figure</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/anisotropic_ratio_9_swd.png" target="_blank" rel="noopener">ratio 9 figure</a></div><p class="note">Important control issue: both settings have <code>σrσt=.09</code>, but their total variance <code>σr²+σt²</code> is different.</p></div></div>
-        </div>
-      </article>
-
-      <article id="task-003">
-        <p class="eyebrow">TASK 003 <span class="status done">已完成</span></p><h2>32D 基準比較</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">把同一個 8-mode GMM 從 2D 放到 32D 後，RF / DDPM / DDIM 的 ranking 會不會改變？</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Dimension：2D → 32D。前兩維保留 circular modes，其餘 30 維只有 zero-mean isotropic variation。仍比較 RF / DDPM / DDIM 與 NFE 1 / 5 / 20 / 100。</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">8 modes、radius 4、component std .30、3000 training steps、同一套 diffusion schedule。三個 samplers 共用 exact target samples、initial noise 和 SWD projection seeds。</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">32 維全部一起算的 SWD。越低越好。</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">RF 在四個 NFE 都最低。DDIM 在 NFE 5、20 低於 DDPM；NFE 100 時 DDPM 稍低於 DDIM。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">RF ranking 在這個 32D run 仍然出現。但 30 個不承載 mode 的維度可能稀釋 SWD，所以 32D 的數字不能直接和 2D 比，也不能確定前兩個重要座標真的被學好。Task 007 專門檢查這件事。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/high_dim.py" target="_blank" rel="noopener">experiments/high_dim.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/high_dim.csv" target="_blank" rel="noopener">high_dim.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/high_dim_swd.png" target="_blank" rel="noopener">high_dim_swd.png</a></div><table class="result-table"><tr><th>方法</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>.494</td><td>.074</td><td>.028</td><td>.023</td></tr><tr><td>DDPM</td><td>7.726</td><td>.130</td><td>.060</td><td>.041</td></tr><tr><td>DDIM</td><td>7.726</td><td>.109</td><td>.050</td><td>.045</td></tr></table></div></div>
-        </div>
-      </article>
-
-      <article id="task-004">
-        <p class="eyebrow">TASK 004 <span class="status done">已完成</span></p><h2>有限資料量與 mode separation</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Task 001 的 ranking 會不會只是因為資料很多、或 modes 剛好很好分？</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">做兩組 robustness tests：training size = 500 / 5000；另外把 ring radius 改成 1.5 / 6.0。Mode-separation 的關鍵條件再用 3 個 training seeds 重跑。</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">2D、8 modes、component std .30、3000 training steps、同一套 diffusion schedule。每個 condition 內三個 samplers 共用 exact target samples、initial noise 與 SWD projections。</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">SWD；3-seed mode-separation replication 使用 mean SWD ± standard deviation。</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">500 / 5000 的單次 finite-data run 都是 RF 最低。Mode separation 的單一 seed 曾在 radius 6、NFE 20 / 100 出現 DDPM < RF；但 3-seed replication 後，radius 1.5 和 6.0 的所有 NFE 都是 RF mean SWD 最低。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">最重要的發現不是「RF 贏」，而是單一 seed 的 sampler crossing 消失了。Sampler ranking 很容易被單次訓練誤導，所以後面的 data-size 結論也需要 replication。這直接帶到 Task 006。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/robustness.py" target="_blank" rel="noopener">experiments/robustness.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/sample_size.csv" target="_blank" rel="noopener">sample_size.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/mode_separation.csv" target="_blank" rel="noopener">mode_separation.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/mode_separation_replication.csv" target="_blank" rel="noopener">mode_separation_replication.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/mode_separation_replication_swd.png" target="_blank" rel="noopener">replication figure</a></div></div></div>
-        </div>
-      </article>
-
-      <article id="task-005">
-        <p class="eyebrow">TASK 005 <span class="status done">已完成</span></p><h2>程式與報告遷移</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">怎麼把原本 notebook 裡的實驗拆成可重現、可測試、之後能繼續加 task 的 project structure？</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Code organization：notebook baseline → <code>src/</code> + <code>experiments/</code> + <code>results/</code> + <code>report.qmd</code> + tests。</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">不改既有 scientific setup 和 frozen SWD results；這個 task 只處理 reproducibility / project structure。</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Experiment entrypoints 必須重現 pinned SWD 到小數第 6 位，並通過 pytest / protocol assertions。</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">目前四個 experiment entrypoints 都會把結果寫進 <code>results/</code>，並用 golden assertions 檢查數值是否漂移。審查也補回 tolerance、seeded tests、NFE=1 equality check、<code>conftest</code> 和 dependency pins。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">這不是一個新的 scientific result。它的用途是讓後續 task 的結果可以追、可以重跑，也比較不容易因重構 code 偷偷改掉 baseline。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/tree/main/src" target="_blank" rel="noopener">src/</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/tree/main/experiments" target="_blank" rel="noopener">experiments/</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/tree/main/Code" target="_blank" rel="noopener">Code/test_*.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/report.qmd" target="_blank" rel="noopener">report.qmd</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/tree/main/results" target="_blank" rel="noopener">results/</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/README.md" target="_blank" rel="noopener">README</a></div></div>
-        </div>
-      </article>
-
-      <article id="task-006">
-        <p class="eyebrow">TASK 006 <span class="status done">已完成</span></p><h2>資料量 replication</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Task 004 的 finite-data ranking 在不同資料量、不同抽到的 training dataset 下到底穩不穩？</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Training size = 500 / 1000 / 2500 / 5000；每個 size 使用 3 個獨立 datasets。每個 condition 比較 RF / DDPM / DDIM 與 NFE 1 / 5 / 20 / 100。</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">2D 8-mode GMM、radius 4、component std .30、3000 training steps、同一套 diffusion schedule。每個 replicate 內三個 samplers 共用 training dataset、exact target samples、initial noise 和 SWD projections。</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">3 個 independent datasets 的 mean SWD ± standard deviation。共 144 筆 raw results、48 筆 aggregate results。</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">NFE 1 時四個 data sizes 都是 RF mean SWD 最低。500 / 1000 在較高 NFE 也仍是 RF 最低；2500 的 NFE 100 是 DDPM 較低；5000 的 NFE 5 / 20 / 100 也是 DDPM 較低。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">沒有看到「data 越多就固定往某個 sampler 移動」的單調規律，也沒有一個方法在所有 size / NFE 都最好。這表示 ranking 會依 regime 改變；3 replicates 也只提供目前這組 setting 的 evidence，不是一般定理。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/robustness.py" target="_blank" rel="noopener">experiments/robustness.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/sample_size_replication_raw.csv" target="_blank" rel="noopener">raw.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/sample_size_replication.csv" target="_blank" rel="noopener">summary.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/sample_size_replication_swd.png" target="_blank" rel="noopener">replication figure</a></div></div>
-        </div>
-      </article>
-
-      <article id="task-007">
-        <p class="eyebrow">TASK 007 <span class="status proposed">已設計，未執行</span></p><h2>32D 指定座標 metric</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Task 003 的 all-coordinate SWD 會不會被 30 個不承載 modes 的座標稀釋，讓 32D 看起來比實際更好？</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">只改 evaluation：同一批 32D samples 分別算 all-coordinate SWD 與只看前兩維的 SWD。</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">沿用 Task 003 的 target、models、samplers、NFE 和 seeds；不重新定義 training problem。</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">All-coordinate SWD vs first-two-coordinate SWD。</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">尚未執行。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">如果 first-two-coordinate SWD 明顯比 all-coordinate SWD 差，就代表 Task 003 的低數字部分來自 metric dilution，而不是 mode geometry 真的被處理得很好。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">目前 <code>diffusion-model-experiment/main</code> 沒有這個 control 的 implementation。</p></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><p class="fact-value">None — designed, not run.</p></div>
-        </div>
-      </article>
-
-      <article id="task-008">
-        <p class="eyebrow">TASK 008 <span class="status proposed">已設計，未執行</span></p><h2>固定 total variance 的 anisotropy control</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Task 002 的變化到底來自 anisotropy 本身，還是只是因為 total variance 也一起變了？</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">2×2 design：anisotropy ratio <code>ρ ∈ {4,9}</code>；total variance <code>S ∈ {.3825,.8200}</code>。用 <code>σt=√(S/(ρ²+1))</code>、<code>σr=ρσt</code> 建 covariance。</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">沿用 Task 002 的 2D 8-mode target、sampler comparison、NFE 和 training protocol。比較 anisotropy 時固定 <code>S</code>；比較 scale 時固定 <code>ρ</code>。</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">SWD；跨不同 scale 時另外看 <code>SWD / √S</code>。</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">尚未執行。Task 002 已經提供 2×2 中的兩個 diagonal cells，另外兩個 cells 還需要跑。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">這是 Task 002 真正需要的 control：把 shape effect 和 scale effect 拆開，才有資格說 anisotropy 本身是否改變 sampler ranking。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">目前 <code>diffusion-model-experiment/main</code> 沒有這個 2×2 control 的 implementation。</p></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><p class="fact-value">None — designed, not run.</p></div>
-        </div>
-      </article>
-
-      <article id="task-009">
-        <p class="eyebrow">TASK 009 <span class="status done">文獻整理完成</span></p><h2>Ancestral sampling 為何可能有幫助</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">為什麼我們的 GMM 裡 DDPM 的 stochastic reverse sampling 可能比 deterministic DDIM 好？</p></div>
-          <div class="fact-row"><div class="fact-label">Compared</div><p class="fact-value">DDIM 的 <code>η</code> 從 <code>η=0</code> deterministic DDIM 連到 <code>η=1</code> DDPM；同時對照 DDIM 論文的 truncated-sampling observation 和本專案 GMM 的方向。</p></div>
-          <div class="fact-row"><div class="fact-label">Evidence</div><p class="fact-value">DDIM 論文的 CIFAR truncated sampling 中，增加 η 時 FID 變差；本專案的 2D GMM 則觀察到 stochastic DDPM 比 DDIM 好。兩邊的 dataset、metric、model 都不同，所以只能比較方向，不能直接比較數字。</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">文獻沒有直接回答我們的現象，而且 published direction 和我們的 GMM observation 相反。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">一個工作假說是：這裡 stochasticity 主要在修 learned-score approximation error，而不是單純修 discretization error。這仍然只是 hypothesis；需要 eta sweep 和 oracle-score control 才能分辨。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">None — literature task.</p></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><p class="fact-value">Literature note and the hypothesis that motivates Task 010 / oracle-score control.</p></div>
-        </div>
-      </article>
-
-      <article id="task-010">
-        <p class="eyebrow">TASK 010 <span class="status active-status">結果已記錄；repo 尚未同步</span></p><h2>η sweep</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">固定 trained model 後，只增加 reverse sampling 的 stochasticity，sample quality 會怎麼變？</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value"><code>η = 0, .25, .5, .75, 1</code>，另外記錄 <code>sigma_hat</code> setting。<code>η=0</code> 對應 deterministic DDIM；<code>η=1</code> 應對應 DDPM。</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">同一個 trained diffusion model、target GMM、true target samples 與 initial noise。每個 η 都在 NFE 1 / 5 / 20 / 100 下測試。</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Generated samples 與 true GMM samples 的 SWD。越低越好。</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">NFE > 1 時，η 從 0 增加到 1，SWD 在這個 run 中單調下降。NFE 1 時所有 setting 相同。η=0 對上 DDIM reference；η=1 對上 DDPM reference。</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">這支持「stochasticity 在目前 learned-model sampling pipeline 裡有幫助」。但它還不能告訴我們 stochasticity 修的是 model error 還是 discretization error；oracle-score experiment 才是下一個 control。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">Handbook 舊紀錄提到 <code>experiments/eta_sweep.py</code>，但目前 connected GitHub repo 的 <code>main</code> branch 找不到這個檔案，所以先不放失效連結。</p></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><table class="result-table"><tr><th>setting</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>η=0</td><td>7.420</td><td>.774</td><td>.319</td><td>.237</td></tr><tr><td>η=.25</td><td>7.420</td><td>.748</td><td>.288</td><td>.214</td></tr><tr><td>η=.5</td><td>7.420</td><td>.683</td><td>.236</td><td>.167</td></tr><tr><td>η=.75</td><td>7.420</td><td>.567</td><td>.140</td><td>.128</td></tr><tr><td>η=1</td><td>7.420</td><td>.363</td><td>.107</td><td>.112</td></tr><tr><td>sigma_hat</td><td>7.420</td><td>.327</td><td>.111</td><td>.112</td></tr></table><p class="note"><code>sigma_hat</code> 在低 NFE 沒有崩壞仍待解釋。</p></div></div>
-        </div>
-      </article>
-      <article id="task-011">
-        <p class="eyebrow">TASK 011 <span class="status active-status">部分完成</span></p><h2>誤差分解 controls</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">η sweep 裡 stochasticity 的效果，來自 learned-score 的 model error，還是 reverse update 的 discretization error？同時也量化從 <code>N(0, I)</code> 而非真實 <code>q(x_T)</code> 起跑的 prior mismatch。</p></div>
-          <div class="fact-row"><div class="fact-label">Shared fact</div><p class="fact-value">GMM 加噪後仍是 GMM。在訊號比例 <code>ᾱ</code>，component k 的 mean 是 <code>√ᾱ·μk</code>，variance 是 <code>ᾱσ₀² + (1−ᾱ)</code>；所以能精確抽樣，也有 closed-form score。</p></div>
-          <div class="fact-row"><div class="fact-label">Experiment A</div><p class="fact-value">Prior mismatch 尚未執行。會比較四個 β scale 下，從 <code>N(0, I)</code> 與真實 terminal <code>q(x_T)</code> 起跑的 SWD gap。</p></div>
-          <div class="fact-row"><div class="fact-label">Experiment B</div><p class="fact-value">Oracle-score η sweep 已完成。closed-form score 對 autograd 的檢查，以及 NFE 1 所有 setting 相同的檢查都通過；高噪聲極限檢查尚未完成。</p></div>
-          <div class="fact-row"><div class="fact-label">Oracle B2</div><div class="fact-value"><p>五個 paired replicates 顯示 NFE 5 的 <code>η=1</code> 比 <code>η=0</code> 差，方向與 learned run 相反。NFE 20 的 <code>sigma_hat</code> 則穩定優於 <code>η=0</code>。</p><table class="result-table"><tr><th>NFE</th><th>setting</th><th>mean paired diff</th><th>same sign 5/5</th></tr><tr><td>5</td><td>η=1.0</td><td>+.0181</td><td>yes</td></tr><tr><td>20</td><td>sigma_hat</td><td>−.0205</td><td>yes</td></tr><tr><td>20</td><td>η=1.0</td><td>−.0051</td><td>no</td></tr><tr><td>100</td><td>η=1.0</td><td>−.0089</td><td>no</td></tr></table></div></div>
-          <div class="fact-row"><div class="fact-label">Open</div><p class="fact-value">仍待完成高噪聲極限檢查、learned side replication，以及 prior mismatch 實驗。這些結果目前只涵蓋 2D、單一 SWD metric、五個 oracle replicates 與四個 NFE。</p></div>
-        </div>
-      </article>
-    </section>
-  </div>
-</main>
-
-<main class="page en">
-  <div class="language"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
-  <h1>Diffusion Model Workspace</h1>
-  <nav class="tabs" aria-label="Main tabs">
-    <a href="../index.html">Handbook</a>
-    <a href="research-questions.html">Research questions</a>
-    <a href="diffusion-guide.html">Diffusion.py guide</a>
-    <a class="active" href="#task-011">Tasks</a>
-  </nav>
-  <div class="workspace">
-    <aside><details><summary>CONTENTS</summary><nav class="contents" aria-label="Task contents">
-      <h2>TASKS</h2>
-      <a class="task-link" href="#task-001"><span class="number">001</span>Baseline comparison</a>
-      <a class="task-link" href="#task-002"><span class="number">002</span>Anisotropic covariance</a>
-      <a class="task-link" href="#task-003"><span class="number">003</span>32D baseline</a>
-      <a class="task-link" href="#task-004"><span class="number">004</span>Data size and mode separation</a>
-      <a class="task-link" href="#task-005"><span class="number">005</span>Code and report migration</a>
-      <a class="task-link" href="#task-006"><span class="number">006</span>Data-size replication</a>
-      <a class="task-link" href="#task-007"><span class="number">007</span>32D coordinate metric</a>
-      <a class="task-link" href="#task-008"><span class="number">008</span>Controlled anisotropy</a>
-      <a class="task-link" href="#task-009"><span class="number">009</span>Ancestral-sampling literature</a>
-      <a class="task-link" href="#task-010"><span class="number">010</span>Eta sweep</a>
-      <a class="task-link" href="#task-011"><span class="number">011</span>Error-decomposition controls</a>
-    </nav></details></aside>
-    <section aria-live="polite">
-      <article id="task-001">
-        <p class="eyebrow">TASK 001 <span class="status done">Complete</span></p><h2>DDPM, DDIM, and RF baseline</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">How do RF, DDPM, and deterministic DDIM compare on the same simple 2D GMM under the same NFE budget?</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Sampler: RF / DDPM / DDIM. NFE: 1 / 5 / 20 / 100.</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">Same 2D 8-mode GMM (radius 4, component std .30), exact target samples, initial noise, and SWD projections. RF and diffusion are both trained for 3000 steps. Diffusion uses <code>T=300</code> with a scaled linear beta schedule.</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Sliced Wasserstein Distance (SWD) between generated samples and exact GMM samples. Lower is better.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">RF had the lowest SWD at every tested NFE in this baseline run. DDPM was below DDIM at NFE 5, 20, and 100. DDPM and DDIM were identical at NFE 1.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">This gives the later experiments a starting point. It does not show that RF is generally better, and it does not tell us which mechanism caused the sampler differences.</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/baseline_2d.py" target="_blank" rel="noopener">experiments/baseline_2d.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/baseline_2d.csv" target="_blank" rel="noopener">baseline_2d.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/baseline_2d_swd.png" target="_blank" rel="noopener">baseline_2d_swd.png</a></div><table class="result-table"><tr><th>Method</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>2.466</td><td>.229</td><td>.090</td><td>.072</td></tr><tr><td>DDPM</td><td>7.822</td><td>.383</td><td>.149</td><td>.111</td></tr><tr><td>DDIM</td><td>7.822</td><td>.791</td><td>.298</td><td>.228</td></tr></table><p class="note">Implementation note: the unscaled schedule had unsuitable terminal SNR, so this baseline uses the scaled schedule.</p></div></div>
-        </div>
-      </article>
-
-      <article id="task-002">
-        <p class="eyebrow">TASK 002 <span class="status done">Complete</span></p><h2>Anisotropic covariance</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">If each Gaussian component is stretched from a circle into an oriented ellipse, does the sampler ranking from Task 001 still hold?</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Target covariance: ratio 4 uses <code>σr=.60, σt=.15</code>; ratio 9 uses <code>σr=.90, σt=.10</code>. We also compare RF / DDPM / DDIM at NFE 1 / 5 / 20 / 100 and repeat the sweep with 3 training seeds.</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">2D, 8 modes, radius 4, 3000 training steps, and the same diffusion schedule. Within each target and seed, the three samplers share the exact target samples, initial noise, and SWD projection seeds.</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Mean SWD ± standard deviation across 3 seeds. Lower is better.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">For both ratio 4 and ratio 9, RF had the lowest mean SWD at NFE 1, 5, 20, and 100.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">The RF ranking from Task 001 also appeared on these two anisotropic targets. But this does not isolate anisotropy: ratio 4 and ratio 9 also change total variance from <code>.3825</code> to <code>.8200</code>. Shape and scale are therefore mixed together. Task 008 was created to separate them.</p></div>
+          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Ratio 4：<code>σr=.60, σt=.15</code>；ratio 9：<code>σr=.90, σt=.10</code>。比較 RF / DDPM / DDIM、NFE 1 / 5 / 20 / 100，並用 3 training seeds 重跑。</p></div>
+          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">2D、8 modes、radius 4、3000 training steps、同一套 diffusion schedule。每個 target / seed 內共用 exact target samples、initial noise 和 SWD projection seeds。</p></div>
+          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">3 seeds 的 mean SWD ± standard deviation。</p></div>
+          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">Ratio 4 和 ratio 9 中，RF 在 NFE 1、5、20、100 都有最低 mean SWD。</p></div>
+          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">RF ranking 在這兩個 anisotropic targets 上仍出現，但這不是乾淨的 anisotropy effect：兩個設定的 total variance 同時從 <code>.3825</code> 變成 <code>.8200</code>。Shape 和 scale 被混在一起，因此需要 Task 005。</p></div>
           <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/anisotropic.py" target="_blank" rel="noopener">experiments/anisotropic.py</a></div></div>
           <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/anisotropic_ratio_4.csv" target="_blank" rel="noopener">ratio_4.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/anisotropic_ratio_9.csv" target="_blank" rel="noopener">ratio_9.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/anisotropic_ratio_4_swd.png" target="_blank" rel="noopener">ratio 4 figure</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/anisotropic_ratio_9_swd.png" target="_blank" rel="noopener">ratio 9 figure</a></div></div>
         </div>
       </article>
 
       <article id="task-003">
-        <p class="eyebrow">TASK 003 <span class="status done">Complete</span></p><h2>32D baseline</h2>
+        <p class="eyebrow">TASK 003 <span class="status active-status">baseline 完成；metric control 待做</span></p><h2>32D baseline + metric validation</h2>
         <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">If the same 8-mode GMM is moved from 2D to 32D, does the RF / DDPM / DDIM ranking change?</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Dimension: 2D → 32D. The circular modes remain in the first two coordinates; the other 30 coordinates have zero-mean isotropic variation. RF / DDPM / DDIM are still tested at NFE 1 / 5 / 20 / 100.</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">8 modes, radius 4, component std .30, 3000 training steps, and the same diffusion schedule. The three samplers share target samples, initial noise, and SWD projection seeds.</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">SWD calculated across all 32 coordinates. Lower is better.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">RF was lowest at all four NFE values. DDIM was below DDPM at NFE 5 and 20, while DDPM was slightly lower at NFE 100.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">The RF ranking still appeared in this 32D run. But the 30 coordinates without mode structure may dilute the SWD. So the 32D values should not be compared directly with 2D, and they do not tell us whether the first two important coordinates are actually good. Task 007 checks this.</p></div>
+          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">把同一個 8-mode problem 從 2D 放進 32D 後，sampler ranking 會不會改變？而 32D SWD 有沒有把真正重要的 mode error 稀釋掉？</p></div>
+          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Dimension：2D → 32D。只有前兩維保留 8-mode geometry；其餘 30 維是 zero-mean isotropic variation。</p></div>
+          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">8 modes、radius 4、component std .30、3000 training steps、diffusion schedule、RF / DDPM / DDIM、NFE 1 / 5 / 20 / 100。</p></div>
+          <div class="fact-row"><div class="fact-label">Metric</div><div class="fact-value"><p>已完成：all-coordinate 32D SWD。</p><p class="note">待做 control：同一批 samples 再算 first-two-coordinate SWD，直接檢查 projection dilution。</p></div></div>
+          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">32D all-coordinate SWD 中 RF 在四個 NFE 都最低。DDIM 在 NFE 5、20 低於 DDPM；NFE 100 時 DDPM 稍低。</p></div>
+          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">這是一個 dimension stress test，不是「32 維都變成複雜 multimodal structure」。目前只能說 ranking 在這個 32D embedding 仍出現；在 first-two-coordinate metric 跑完前，不能確定低 SWD 是否部分來自 30 個 mode-free dimensions 的 dilution。</p></div>
           <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/high_dim.py" target="_blank" rel="noopener">experiments/high_dim.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/high_dim.csv" target="_blank" rel="noopener">high_dim.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/high_dim_swd.png" target="_blank" rel="noopener">high_dim_swd.png</a></div><table class="result-table"><tr><th>Method</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>.494</td><td>.074</td><td>.028</td><td>.023</td></tr><tr><td>DDPM</td><td>7.726</td><td>.130</td><td>.060</td><td>.041</td></tr><tr><td>DDIM</td><td>7.726</td><td>.109</td><td>.050</td><td>.045</td></tr></table></div></div>
+          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/high_dim.csv" target="_blank" rel="noopener">high_dim.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/high_dim_swd.png" target="_blank" rel="noopener">high_dim_swd.png</a></div><table class="result-table"><tr><th>方法</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>.494</td><td>.074</td><td>.028</td><td>.023</td></tr><tr><td>DDPM</td><td>7.726</td><td>.130</td><td>.060</td><td>.041</td></tr><tr><td>DDIM</td><td>7.726</td><td>.109</td><td>.050</td><td>.045</td></tr></table><p class="note">First-two-coordinate metric 尚未執行，目前沒有 output。</p></div></div>
         </div>
       </article>
 
       <article id="task-004">
-        <p class="eyebrow">TASK 004 <span class="status done">Complete</span></p><h2>Finite data and mode separation</h2>
+        <p class="eyebrow">TASK 004 <span class="status done">已完成</span></p><h2>Finite data、mode separation 與 replication</h2>
         <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Is the Task 001 ranking only there because training data are plentiful or because the modes happen to have an easy separation?</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Two robustness tests: training size = 500 / 5000, and ring radius = 1.5 / 6.0. The important mode-separation conditions were then repeated with 3 training seeds.</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">2D, 8 modes, component std .30, 3000 training steps, and the same diffusion schedule. Inside each condition, the three samplers share target samples, initial noise, and SWD projections.</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">SWD. The mode-separation replication uses mean SWD ± standard deviation across 3 seeds.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">RF was lowest in the single-run 500 / 5000 finite-data tests. A single radius-6 run showed DDPM below RF at NFE 20 / 100, but this crossing disappeared in the 3-seed replication: RF had the lowest mean at every NFE for both radii.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">The useful finding here is that a sampler crossing from one seed did not survive replication. One training run can give a misleading ranking. The finite-data result therefore needed the larger replication in Task 006.</p></div>
+          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Task 001 的 ranking 會不會依 training data size、抽到哪個 dataset、或 mode separation 而改變？</p></div>
+          <div class="fact-row"><div class="fact-label">Changed</div><div class="fact-value"><ul><li>Initial finite-data test：training size 500 / 5000。</li><li>Mode separation：radius 1.5 / 6.0，關鍵條件再做 3-seed replication。</li><li>Data-size replication：500 / 1000 / 2500 / 5000，每個 size 用 3 個 independent datasets。</li></ul></div></div>
+          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">2D 8-mode GMM、component std .30、3000 training steps、同一套 diffusion schedule；每個 replicate 內 RF / DDPM / DDIM 共用 dataset、target samples、initial noise 和 SWD projections。</p></div>
+          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">SWD；replication 使用 mean SWD ± standard deviation。Data-size replication 共 144 raw results、48 aggregate results。</p></div>
+          <div class="fact-row"><div class="fact-label">Result</div><div class="fact-value"><ul><li>Radius 6 的 single seed 曾在 NFE 20 / 100 出現 DDPM &lt; RF；3-seed replication 後 crossing 消失，兩個 radii 都是 RF mean SWD 最低。</li><li>Data-size replication：NFE 1 四個 sizes 都是 RF 最低；500 / 1000 的高 NFE 仍是 RF；2500 的 NFE 100 與 5000 的 NFE 5 / 20 / 100 則是 DDPM 較低。</li></ul></div></div>
+          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">沒有 monotonic data-size effect，也沒有一個 sampler 在所有 regime 都最好。最重要的是 single-seed crossing 可以消失，所以 sampler ranking 不能靠單次 training run 判斷。</p></div>
           <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/robustness.py" target="_blank" rel="noopener">experiments/robustness.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/sample_size.csv" target="_blank" rel="noopener">sample_size.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/mode_separation.csv" target="_blank" rel="noopener">mode_separation.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/mode_separation_replication.csv" target="_blank" rel="noopener">mode_separation_replication.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/mode_separation_replication_swd.png" target="_blank" rel="noopener">replication figure</a></div></div>
+          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/sample_size.csv" target="_blank" rel="noopener">sample_size.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/mode_separation_replication.csv" target="_blank" rel="noopener">mode replication</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/sample_size_replication_raw.csv" target="_blank" rel="noopener">data-size raw</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/sample_size_replication.csv" target="_blank" rel="noopener">data-size summary</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/sample_size_replication_swd.png" target="_blank" rel="noopener">data-size figure</a></div></div>
         </div>
       </article>
 
       <article id="task-005">
-        <p class="eyebrow">TASK 005 <span class="status done">Complete</span></p><h2>Code and report migration</h2>
+        <p class="eyebrow">TASK 005 <span class="status proposed">已設計，未執行</span></p><h2>Controlled anisotropy</h2>
         <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">How can the notebook experiments be turned into a reproducible project that is easier to test and extend?</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Code organization: notebook baseline → <code>src/</code> + <code>experiments/</code> + <code>results/</code> + <code>report.qmd</code> + tests.</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">The scientific setups and frozen SWD results were not supposed to change. This task was only about reproducibility and project structure.</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Experiment entrypoints must reproduce the pinned SWD values to 6 decimal places and pass the tests / protocol assertions.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">The experiment entrypoints now write their outputs to <code>results/</code> and check them with golden assertions. Review also recovered missing tolerance, seeded tests, the NFE=1 equality check, <code>conftest</code>, and dependency pins.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">This is not a new scientific result. It makes later tasks easier to reproduce and makes it harder for a code refactor to silently change the baseline.</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/tree/main/src" target="_blank" rel="noopener">src/</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/tree/main/experiments" target="_blank" rel="noopener">experiments/</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/tree/main/Code" target="_blank" rel="noopener">Code/test_*.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/report.qmd" target="_blank" rel="noopener">report.qmd</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/tree/main/results" target="_blank" rel="noopener">results/</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/README.md" target="_blank" rel="noopener">README</a></div></div>
+          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Task 002 的變化到底來自 anisotropy 本身，還是 total variance 同時改變造成的？</p></div>
+          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">2×2 design：anisotropy ratio <code>ρ ∈ {4,9}</code>；total variance <code>S ∈ {.3825,.8200}</code>。用 <code>σt=√(S/(ρ²+1))</code>、<code>σr=ρσt</code> 建 covariance。</p></div>
+          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">沿用 Task 002 的 target、sampler comparison、NFE 和 training protocol。比較 anisotropy 時固定 <code>S</code>；比較 scale 時固定 <code>ρ</code>。</p></div>
+          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">SWD；跨 scale 時另外看 <code>SWD / √S</code>。</p></div>
+          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">尚未執行。Task 002 已提供 2×2 的兩個 diagonal cells，另外兩個 cells 還需要跑。</p></div>
+          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">這是把 shape effect 和 scale effect 拆開的必要 control。完成前不能把 Task 002 解讀成純 anisotropy effect。</p></div>
+          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">目前 connected repo 的 <code>main</code> 沒有這個 control implementation。</p></div>
+          <div class="fact-row"><div class="fact-label">Outputs</div><p class="fact-value">None — designed, not run.</p></div>
         </div>
       </article>
 
       <article id="task-006">
-        <p class="eyebrow">TASK 006 <span class="status done">Complete</span></p><h2>Data-size replication</h2>
+        <p class="eyebrow">TASK 006 <span class="status active-status">部分完成</span></p><h2>Stochasticity：literature → η sweep → oracle score</h2>
         <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">How stable is the finite-data ranking from Task 004 across training-set sizes and different sampled datasets?</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Training size = 500 / 1000 / 2500 / 5000, with 3 independent datasets at each size. Each condition compares RF / DDPM / DDIM at NFE 1 / 5 / 20 / 100.</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">2D 8-mode GMM, radius 4, component std .30, 3000 training steps, and the same diffusion schedule. Inside each replicate, the samplers share the training dataset, exact target samples, initial noise, and SWD projections.</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Mean SWD ± standard deviation across 3 independent datasets. This gives 144 raw results and 48 aggregate results.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">RF had the lowest mean at NFE 1 for all four sizes. It also stayed lowest at higher NFE for sizes 500 and 1000. DDPM was lower at NFE 100 for size 2500, and at NFE 5 / 20 / 100 for size 5000.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">There is no clear monotone data-size pattern and no method that wins across every size and NFE. The ranking changes with the regime. Three replicates are still evidence for this setup, not a general result.</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/robustness.py" target="_blank" rel="noopener">experiments/robustness.py</a></div></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/sample_size_replication_raw.csv" target="_blank" rel="noopener">raw.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/sample_size_replication.csv" target="_blank" rel="noopener">summary.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/sample_size_replication_swd.png" target="_blank" rel="noopener">replication figure</a></div></div>
+          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">為什麼目前 GMM 裡 stochastic DDPM sampling 會比 deterministic DDIM 好？它是在修 learned-score model error，還是在修 finite-step discretization error？</p></div>
+          <div class="fact-row"><div class="fact-label">Changed</div><div class="fact-value"><ul><li>η sweep：<code>η = 0, .25, .5, .75, 1</code>，加上 <code>sigma_hat</code>。</li><li>Oracle control：把 learned score 換成 exact GMM score，其餘 sampling comparison 保持一致。</li></ul></div></div>
+          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">同一 target GMM、true target samples、initial noise、NFE 1 / 5 / 20 / 100。η sweep 內固定同一 trained diffusion model；oracle control 只替換 score source。</p></div>
+          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Generated samples 對 true GMM samples 的 SWD；oracle B2 使用 5 個 paired replicates 看 paired difference 的方向。</p></div>
+          <div class="fact-row"><div class="fact-label">Result</div><div class="fact-value"><p>Learned-model η sweep：NFE &gt; 1 時，η 從 0 增加到 1，SWD 單調下降；NFE 1 全部相同。</p><table class="result-table"><tr><th>setting</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>η=0</td><td>7.420</td><td>.774</td><td>.319</td><td>.237</td></tr><tr><td>η=.25</td><td>7.420</td><td>.748</td><td>.288</td><td>.214</td></tr><tr><td>η=.5</td><td>7.420</td><td>.683</td><td>.236</td><td>.167</td></tr><tr><td>η=.75</td><td>7.420</td><td>.567</td><td>.140</td><td>.128</td></tr><tr><td>η=1</td><td>7.420</td><td>.363</td><td>.107</td><td>.112</td></tr><tr><td>sigma_hat</td><td>7.420</td><td>.327</td><td>.111</td><td>.112</td></tr></table><p class="note">Oracle B2：NFE 5 的 η=1 比 η=0 差，5/5 paired replicates 同方向（mean diff +.0181）；NFE 20 的 sigma_hat 比 η=0 好，5/5 同方向（mean diff −.0205）。</p></div></div>
+          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">Learned run 中 stochasticity 的 benefit 在 exact-score NFE 5 反轉，這支持「learned-model error 是其中一個來源」。但 oracle 的 <code>sigma_hat</code> 在 NFE 20 仍有穩定改善，所以 stochasticity 也可能影響 finite-step sampler / discretization。還不能把效果歸因成單一 mechanism。</p></div>
+          <div class="fact-row"><div class="fact-label">Evidence</div><p class="fact-value">DDIM paper 的 CIFAR truncated-sampling observation 是 η 增加時 FID 變差，方向和本專案 learned 2D GMM 相反；dataset、model、metric 不同，因此只作為 motivation，不作直接 comparison。</p></div>
+          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">目前 connected <code>diffusion-model-experiment/main</code> 仍沒有 η / oracle experiment file；Handbook 只記錄已得到的 frozen results。</p></div>
+          <div class="fact-row"><div class="fact-label">Outputs</div><p class="fact-value">已記錄 η sweep 與 oracle B2 results。仍待 high-noise limit check、learned-side replication；<code>sigma_hat</code> 的低-NFE行為也還沒有完整解釋。</p></div>
         </div>
       </article>
 
       <article id="task-007">
-        <p class="eyebrow">TASK 007 <span class="status proposed">Designed, not run</span></p><h2>32D coordinate-specific metric</h2>
+        <p class="eyebrow">TASK 007 <span class="status proposed">未執行</span></p><h2>Terminal prior mismatch</h2>
         <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Is the all-coordinate SWD in Task 003 diluted by the 30 coordinates that do not carry the mode structure?</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Evaluation only: calculate both all-coordinate SWD and SWD using only the first two coordinates on the same regenerated 32D samples.</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">Reuse the Task 003 target, models, samplers, NFE values, and seeds. The training problem does not change.</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">All-coordinate SWD vs first-two-coordinate SWD.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">Not run yet.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">If the first-two-coordinate SWD is much worse, then part of the low 32D value is a metric-dilution effect rather than evidence that the mode geometry is handled well.</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">No implementation is present in <code>diffusion-model-experiment/main</code>.</p></div>
+          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Reverse sampling 通常從 <code>N(0,I)</code> 起跑，但 finite-time forward process 的真實 terminal distribution 是 <code>q(x_T)</code>。這個 mismatch 到底造成多少 sampling error？</p></div>
+          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">β schedule scale factor = 1 / 1.5 / 2 / <code>1000/300</code>，對應 terminal <code>ᾱ_T</code> 約 .049 / .011 / .0024 / .000034。每個 schedule 比較從 <code>N(0,I)</code> 與 true <code>q(x_T)</code> 起跑。</p></div>
+          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">同一 target GMM、sampler、model / score setup、NFE、evaluation samples 和 SWD protocol；只改 terminal initialization source。</p></div>
+          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value"><code>SWD[N(0,I) start] − SWD[q(x_T) start]</code>，把這個 gap 當成 prior-mismatch cost。</p></div>
+          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">尚未執行。</p></div>
+          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">Prediction：terminal <code>ᾱ_T</code> 越大，<code>q(x_T)</code> 越不像 <code>N(0,I)</code>，gap 應越大；到 .000034 時應接近零。如果 mismatch 是起始分布問題，單純增加 NFE 不應把這個 gap 消掉。</p></div>
+          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">目前 connected repo 的 <code>main</code> 沒有這個 experiment implementation。</p></div>
           <div class="fact-row"><div class="fact-label">Outputs</div><p class="fact-value">None — designed, not run.</p></div>
-        </div>
-      </article>
-
-      <article id="task-008">
-        <p class="eyebrow">TASK 008 <span class="status proposed">Designed, not run</span></p><h2>Controlled anisotropy</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Was the Task 002 change caused by anisotropy itself, or by total variance changing at the same time?</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">2×2 design: anisotropy ratio <code>ρ ∈ {4,9}</code> and total variance <code>S ∈ {.3825,.8200}</code>. Use <code>σt=√(S/(ρ²+1))</code> and <code>σr=ρσt</code>.</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">Reuse the Task 002 2D 8-mode target, sampler comparison, NFE values, and training protocol. Hold <code>S</code> fixed when comparing anisotropy and hold <code>ρ</code> fixed when comparing scale.</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">SWD, plus <code>SWD / √S</code> for cross-scale comparisons.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">Not run yet. Task 002 already gives the two diagonal cells of the 2×2 design; the other two cells still need to be run.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">This is the control needed to separate shape from scale. Without it, Task 002 cannot tell us whether anisotropy itself changes the sampler ranking.</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">No implementation is present in <code>diffusion-model-experiment/main</code>.</p></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><p class="fact-value">None — designed, not run.</p></div>
-        </div>
-      </article>
-
-      <article id="task-009">
-        <p class="eyebrow">TASK 009 <span class="status done">Literature pass complete</span></p><h2>Why ancestral sampling might help</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Why might stochastic DDPM sampling perform better than deterministic DDIM in our GMM setting?</p></div>
-          <div class="fact-row"><div class="fact-label">Compared</div><p class="fact-value">DDIM uses <code>eta</code> to move from deterministic DDIM at zero to DDPM at one. We compared the direction reported in the DDIM truncated-sampling experiment with the direction seen in this project.</p></div>
-          <div class="fact-row"><div class="fact-label">Evidence</div><p class="fact-value">In the DDIM CIFAR truncated-sampling result, higher eta gave worse FID. Our 2D GMM observation went in the opposite direction. The datasets, models, and metrics are different, so only the direction is being compared.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">The literature does not directly explain our observation, and the published direction is opposite to what we saw on the GMM.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">One working hypothesis is that stochasticity is correcting learned-score approximation error here, rather than only discretization error. This is still a hypothesis. The eta sweep and an oracle-score control are needed to separate the explanations.</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">None — literature task.</p></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><p class="fact-value">Literature note and the hypothesis motivating Task 010 and the oracle-score control.</p></div>
-        </div>
-      </article>
-
-      <article id="task-010">
-        <p class="eyebrow">TASK 010 <span class="status active-status">Results recorded; repo not synced</span></p><h2>Eta sweep</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">With the trained model fixed, what happens to sample quality when we only increase stochasticity during reverse sampling?</p></div>
-          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value"><code>eta = 0, .25, .5, .75, 1</code>, plus the recorded <code>sigma_hat</code> setting. <code>eta=0</code> is deterministic DDIM; <code>eta=1</code> should match DDPM.</p></div>
-          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">Same trained diffusion model, target GMM, true target samples, and initial noise. Every eta is tested at NFE 1 / 5 / 20 / 100.</p></div>
-          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">SWD between generated samples and true GMM samples. Lower is better.</p></div>
-          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">For NFE > 1, SWD decreased monotonically as eta moved from 0 to 1 in this run. All settings were identical at NFE 1. Eta 0 matched the DDIM reference and eta 1 matched the DDPM reference.</p></div>
-          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">This supports the narrower claim that stochasticity helps somewhere in the current learned-model sampling pipeline. It still cannot tell us whether the improvement comes from correcting model error or discretization error. The oracle-score experiment is the next control.</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">The older Handbook record mentions <code>experiments/eta_sweep.py</code>, but that file is not present in the connected GitHub repo's current <code>main</code> branch, so no broken link is shown here.</p></div>
-          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><table class="result-table"><tr><th>setting</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>eta=0</td><td>7.420</td><td>.774</td><td>.319</td><td>.237</td></tr><tr><td>eta=.25</td><td>7.420</td><td>.748</td><td>.288</td><td>.214</td></tr><tr><td>eta=.5</td><td>7.420</td><td>.683</td><td>.236</td><td>.167</td></tr><tr><td>eta=.75</td><td>7.420</td><td>.567</td><td>.140</td><td>.128</td></tr><tr><td>eta=1</td><td>7.420</td><td>.363</td><td>.107</td><td>.112</td></tr><tr><td>sigma_hat</td><td>7.420</td><td>.327</td><td>.111</td><td>.112</td></tr></table><p class="note">Why <code>sigma_hat</code> does not collapse at low NFE is still open.</p></div></div>
-        </div>
-      </article>
-      <article id="task-011">
-        <p class="eyebrow">TASK 011 <span class="status active-status">Partly complete</span></p><h2>Error-decomposition controls</h2>
-        <div class="experiment-card">
-          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Does the stochasticity effect in the eta sweep come from learned-score model error or reverse-update discretization error? This task also measures the prior-mismatch cost of starting from <code>N(0, I)</code> instead of the true <code>q(x_T)</code>.</p></div>
-          <div class="fact-row"><div class="fact-label">Shared fact</div><p class="fact-value">A noised GMM remains a GMM. At signal fraction <code>ᾱ</code>, component k has mean <code>√ᾱ·μk</code> and variance <code>ᾱσ₀² + (1−ᾱ)</code>, so both exact sampling and a closed-form score are available.</p></div>
-          <div class="fact-row"><div class="fact-label">Experiment A</div><p class="fact-value">Prior mismatch is not run yet. It will compare the SWD gap between starts from <code>N(0, I)</code> and the true terminal <code>q(x_T)</code> across four beta scales.</p></div>
-          <div class="fact-row"><div class="fact-label">Experiment B</div><p class="fact-value">The oracle-score eta sweep is complete. The closed-form score matches autograd, and all settings agree at NFE 1. The high-noise-limit check is still pending.</p></div>
-          <div class="fact-row"><div class="fact-label">Oracle B2</div><div class="fact-value"><p>Five paired replicates show that <code>eta=1</code> is worse than <code>eta=0</code> at NFE 5, the opposite direction from the learned run. At NFE 20, <code>sigma_hat</code> is consistently better than <code>eta=0</code>.</p><table class="result-table"><tr><th>NFE</th><th>setting</th><th>mean paired diff</th><th>same sign 5/5</th></tr><tr><td>5</td><td>eta=1.0</td><td>+.0181</td><td>yes</td></tr><tr><td>20</td><td>sigma_hat</td><td>−.0205</td><td>yes</td></tr><tr><td>20</td><td>eta=1.0</td><td>−.0051</td><td>no</td></tr><tr><td>100</td><td>eta=1.0</td><td>−.0089</td><td>no</td></tr></table></div></div>
-          <div class="fact-row"><div class="fact-label">Open</div><p class="fact-value">The high-noise-limit check, learned-side replication, and the prior-mismatch experiment are still outstanding. Current evidence covers 2D, one SWD metric, five oracle replicates, and four NFE values.</p></div>
         </div>
       </article>
     </section>
   </div>
 </main>
+
 <script>
   const links = [...document.querySelectorAll('.task-link')];
   const tasks = [...document.querySelectorAll('article')];
   function showTask(id) {
-    const selected = tasks.some((task) => task.id === id) ? id : 'task-010';
+    const selected = tasks.some((task) => task.id === id) ? id : 'task-007';
     tasks.forEach((task) => task.classList.toggle('active', task.id === selected));
     links.forEach((link) => link.classList.toggle('current', link.getAttribute('href') === `#${selected}`));
   }
