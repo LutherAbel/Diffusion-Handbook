@@ -1,674 +1,530 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diffusion.py Guide</title>
 <style>
-  :root { --bg:#fafafa; --fg:#1f2328; --muted:#57606a; --card:#fff; --border:#d0d7de; --accent:#0969da; --ok:#1a7f37; }
-  @media (prefers-color-scheme:dark) { :root { --bg:#16181d; --fg:#e6e6e6; --muted:#9aa0a6; --card:#20242b; --border:#3a3f47; --accent:#6cb2ff; --ok:#4cc36a; } }
+  :root {
+    --paper:#fbfbfa;
+    --panel:#ffffff;
+    --ink:#202124;
+    --muted:#687078;
+    --line:#e2e5e8;
+    --blue:#1463dc;
+    --blue-soft:#edf4ff;
+    --green:#177245;
+    --green-soft:#edf8f1;
+    --amber:#946200;
+    --amber-soft:#fff7e3;
+    --code:#f3f6fa;
+  }
   * { box-sizing:border-box; }
-  body { margin:0 auto; max-width:880px; padding:24px 20px 80px; background:var(--bg); color:var(--fg); font-family:"Segoe UI","Microsoft JhengHei",system-ui,sans-serif; line-height:1.65; }
-  h1 { font-size:1.6em; margin-bottom:4px; }
-  h2 { font-size:1.2em; margin-top:2em; border-bottom:2px solid var(--border); padding-bottom:6px; }
-  h3 { font-size:1.05em; margin:1.6em 0 4px; }
-  a { color:var(--accent); text-decoration:none; }
+  html { scroll-behavior:smooth; }
+  body {
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Segoe UI","Microsoft JhengHei",system-ui,sans-serif;
+    line-height:1.7;
+  }
+  .page { max-width:940px; margin:0 auto; padding:24px 20px 88px; }
+  h1 { margin:0; font-size:1.65rem; line-height:1.25; }
+  h2 { margin:44px 0 12px; font-size:1.35rem; line-height:1.35; }
+  h3 { margin:0 0 6px; font-size:1rem; line-height:1.45; }
+  p { margin:7px 0; }
+  a { color:var(--blue); text-decoration:none; }
   a:hover { text-decoration:underline; }
-  .meta,.note { color:var(--muted); font-size:.9em; }
-  .nav,.language-switch { display:flex; flex-wrap:wrap; gap:6px 12px; margin:12px 0 20px; font-size:.9em; }
-  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 18px; margin:10px 0; }
-  .status { border-left:4px solid var(--ok); }
-  .fn { border-left:4px solid var(--accent); }
-  .fn p { margin:8px 0; }
-  .flow { display:block; width:100%; margin:12px 0 20px; border:1px solid var(--border); background:var(--card); border-radius:10px; }
+  code {
+    padding:1px 5px;
+    border-radius:4px;
+    background:var(--code);
+    color:#0d4f9c;
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+    font-size:.92em;
+  }
+  .tabs { display:flex; flex-wrap:wrap; gap:6px 14px; margin:12px 0 26px; font-size:.9rem; }
+  .tabs a { color:var(--blue); }
+  .tabs .active { color:var(--ink); font-weight:700; }
+  .hero {
+    display:grid;
+    grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);
+    gap:18px;
+    margin:18px 0 26px;
+    padding:20px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel);
+  }
+  .hero-copy .kicker { color:var(--blue); font-size:.78rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .hero-copy h2 { margin:5px 0 8px; font-size:1.5rem; border:0; }
+  .hero-copy p { color:var(--muted); }
+  .hero-map { display:grid; gap:7px; align-content:start; }
+  .hero-step {
+    display:grid;
+    grid-template-columns:30px 1fr;
+    gap:8px;
+    align-items:start;
+    padding:7px 9px;
+    border-radius:8px;
+    background:var(--blue-soft);
+    font-size:.9rem;
+  }
+  .hero-step b { color:var(--blue); }
+  .toc {
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin:0 0 24px;
+  }
+  .toc a {
+    padding:5px 9px;
+    border:1px solid #cbdcf8;
+    border-radius:999px;
+    background:#f7faff;
+    font-size:.84rem;
+  }
+  .callout {
+    margin:14px 0;
+    padding:12px 14px;
+    border-left:4px solid var(--blue);
+    border-radius:0 8px 8px 0;
+    background:var(--blue-soft);
+  }
+  .callout.warning { border-color:var(--amber); background:var(--amber-soft); }
+  .callout.good { border-color:var(--green); background:var(--green-soft); }
+  .pipeline {
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:8px;
+    margin:16px 0;
+  }
+  .pipe {
+    position:relative;
+    min-height:102px;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--panel);
+  }
+  .pipe:not(:last-child)::after {
+    content:"→";
+    position:absolute;
+    right:-12px;
+    top:38%;
+    z-index:2;
+    color:var(--muted);
+    font-weight:700;
+  }
+  .pipe .small { display:block; margin-top:5px; color:var(--muted); font-size:.82rem; }
+  .formula-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .formula {
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--panel);
+  }
+  .formula .eq {
+    margin:9px 0 7px;
+    padding:10px;
+    border-radius:6px;
+    background:var(--code);
+    overflow-x:auto;
+    font-family:Cambria,"Times New Roman",serif;
+    font-size:1.03rem;
+  }
+  .formula .why { color:var(--muted); font-size:.9rem; }
+  .compare {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+  .compare-card {
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--panel);
+  }
+  .compare-card strong { color:var(--blue); }
   .table-wrap { overflow-x:auto; }
-  table { width:100%; border-collapse:collapse; margin:10px 0; font-size:.94em; background:var(--card); }
-  .overview table { min-width:600px; }
-  th,td { border:1px solid var(--border); padding:7px 10px; text-align:left; vertical-align:top; }
-  th { background:var(--card); }
-  code { background:var(--bg); padding:1px 6px; border-radius:4px; white-space:nowrap; }
-  .templates { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
-  pre { overflow-x:auto; margin:8px 0 0; padding:10px; border-radius:6px; background:#1f2933; color:#f4f7fa; font-size:.8em; line-height:1.45; }
+  table { width:100%; border-collapse:collapse; margin:10px 0; font-size:.9rem; background:var(--panel); }
+  th,td { padding:8px 9px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  th { color:var(--muted); font-size:.78rem; letter-spacing:.04em; text-transform:uppercase; }
+  .code-map { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .group {
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--panel);
+  }
+  .group-title { color:var(--muted); font-size:.76rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
+  .fn-list { margin:7px 0 0; padding:0; list-style:none; }
+  .fn-list li { padding:5px 0; border-top:1px solid #eef0f2; }
+  .fn-list li:first-child { border-top:0; }
+  .function {
+    margin:12px 0;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:var(--panel);
+    overflow:hidden;
+  }
+  .function summary {
+    cursor:pointer;
+    list-style:none;
+    padding:12px 14px;
+    font-weight:700;
+  }
+  .function summary::-webkit-details-marker { display:none; }
+  .function summary::before { content:"＋"; display:inline-block; width:22px; color:var(--blue); }
+  .function[open] summary::before { content:"−"; }
+  .function-body { padding:0 14px 14px 36px; }
+  .function-body p { margin:6px 0; }
+  .mini-label { color:var(--muted); font-size:.76rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
+  .tag {
+    display:inline-block;
+    margin-right:5px;
+    padding:1px 7px;
+    border-radius:999px;
+    background:var(--blue-soft);
+    color:#24569a;
+    font-size:.74rem;
+    font-weight:700;
+  }
+  pre {
+    margin:10px 0;
+    padding:12px;
+    overflow-x:auto;
+    border-radius:8px;
+    background:#1f2933;
+    color:#f4f7fa;
+    line-height:1.5;
+    font-size:.82rem;
+  }
   pre code { padding:0; background:transparent; color:inherit; white-space:pre; }
-  .lang-control { position:absolute; opacity:0; pointer-events:none; }
-  .language-switch label { cursor:pointer; color:var(--accent); padding:2px 8px; border:1px solid var(--border); border-radius:999px; }
-  #language-en:checked ~ .en, #language-zh:checked ~ .zh { display:block; }
-  #language-en:checked ~ .zh, #language-zh:checked ~ .en { display:none; }
-  #language-en:checked ~ .en .language-switch label[for="language-en"], #language-zh:checked ~ .zh .language-switch label[for="language-zh"] { color:var(--fg); background:var(--card); border-color:var(--accent); font-weight:650; }
-  @media (max-width:720px) { .templates { grid-template-columns:1fr; } }
+  .checklist { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .check {
+    padding:11px 13px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--panel);
+  }
+  .footer-note { margin-top:34px; color:var(--muted); font-size:.88rem; }
+  @media (max-width:780px) {
+    .hero { grid-template-columns:1fr; }
+    .pipeline { grid-template-columns:1fr; }
+    .pipe:not(:last-child)::after { content:"↓"; right:auto; left:50%; top:auto; bottom:-18px; }
+    .formula-grid,.compare,.code-map,.checklist { grid-template-columns:1fr; }
+  }
 </style>
 </head>
 <body>
-<input class="lang-control" type="radio" id="language-en" name="activeLanguage" checked>
-<input class="lang-control" type="radio" id="language-zh" name="activeLanguage">
-<main class="en">
-  <div class="language-switch"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
+<main class="page">
   <h1>Diffusion.py Guide</h1>
-  <div class="meta">The 14 primary functions and classes in <code>src/diffusion.py</code>, one at a time. Shared variables are explained once in one table, and each entry then has three parts, what it does, its unique variables, and what it connects to.</div>
-  <nav class="nav"><a href="tasks.html">Tasks</a><b>Diffusion.py guide</b></nav>
+  <nav class="tabs" aria-label="主要頁籤">
+    <a href="tasks.html">任務</a>
+    <a class="active" href="diffusion-guide.html">Diffusion.py 教學</a>
+  </nav>
 
-  <div class="card status"><p><b>The core idea splits into two sentences.</b> During training, we take clean data, add noise whose exact value we know, and teach a model to recover that noise. During sampling, we start from pure random noise, ask the trained model to estimate the noise inside, remove part of it, and repeat until clean data remains.</p></div>
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="kicker">Mental model first</div>
+      <h2>先懂資料怎麼流，再查 function</h2>
+      <p>這頁不是把 <code>src/diffusion.py</code> 逐行翻譯。目標是讓你看到一個變數或 function 時，知道它在整條 diffusion pipeline 的哪裡、為什麼存在、跟實驗中的 <code>T</code>、<code>NFE</code>、DDIM / DDPM / η 有什麼關係。</p>
+    </div>
+    <div class="hero-map">
+      <div class="hero-step"><b>1</b><span>schedule 決定每個 t 有多 noisy</span></div>
+      <div class="hero-step"><b>2</b><span>training 人工製造 <code>x_t</code>，讓 model 猜 ε</span></div>
+      <div class="hero-step"><b>3</b><span>sampling 用 <code>ε̂</code> 反推 <code>x̂₀</code></span></div>
+      <div class="hero-step"><b>4</b><span>DDIM / DDPM / η 決定怎麼走到下一個 s</span></div>
+    </div>
+  </section>
 
-  <h2>How the pieces connect</h2>
-  <svg class="flow" viewBox="0 0 840 250" role="img" aria-label="Diffusion training and sampling flow">
-    <defs><marker id="arrow-en" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--muted)"/></marker></defs>
-    <g style="fill:none">
-      <rect x="20" y="40" width="130" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <rect x="205" y="40" width="150" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <rect x="410" y="40" width="180" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <rect x="645" y="40" width="170" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <rect x="570" y="155" width="245" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <line x1="150" y1="71" x2="205" y2="71" style="stroke:var(--muted);stroke-width:2" marker-end="url(#arrow-en)"/>
-      <line x1="355" y1="71" x2="410" y2="71" style="stroke:var(--muted);stroke-width:2" marker-end="url(#arrow-en)"/>
-      <line x1="590" y1="71" x2="645" y2="71" style="stroke:var(--muted);stroke-width:2" marker-end="url(#arrow-en)"/>
-      <line x1="730" y1="102" x2="730" y2="155" style="stroke:var(--muted);stroke-width:2" marker-end="url(#arrow-en)"/>
-    </g>
-    <g style="font:600 15px Segoe UI,sans-serif;fill:var(--fg)">
-      <text x="85" y="68" text-anchor="middle">clean x0</text>
-      <text x="280" y="68" text-anchor="middle">noisy xt</text>
-      <text x="500" y="68" text-anchor="middle">NoisePredictorMLP</text>
-      <text x="730" y="68" text-anchor="middle">predicted noise</text>
-      <text x="692" y="183" text-anchor="middle">DDIM / DDPM update</text>
-    </g>
-    <g style="font:13px Segoe UI,sans-serif;fill:var(--muted)">
-      <text x="85" y="88" text-anchor="middle">GMM sample</text>
-      <text x="280" y="88" text-anchor="middle">make batch</text>
-      <text x="500" y="88" text-anchor="middle">model(xt, t)</text>
-      <text x="730" y="88" text-anchor="middle">eps_hat</text>
-      <text x="692" y="203" text-anchor="middle">xt to x0_hat to xs</text>
-      <text x="20" y="145">Training learns eps_hat. Sampling repeats the reverse update until s = 0.</text>
-    </g>
-  </svg>
-  <div class="card">
-    <p>The diagram is easier to read one arrow at a time.</p>
-    <p>Arrow 1, a clean sample <code>x0</code> comes from the GMM (Gaussian mixture model, a distribution built by mixing several Gaussian bumps). <code>make_diffusion_batch</code> adds a known amount of noise to it, producing <code>xt</code>.</p>
-    <p>Arrow 2, <code>xt</code> and the time <code>t</code> go into <code>NoisePredictorMLP</code>.</p>
-    <p>Arrow 3, the model outputs <code>eps_hat</code>, its guess of the noise that was added.</p>
-    <p>Arrow 4 happens during sampling only. The guessed noise is used to estimate the clean sample <code>x0_hat</code>, and a DDIM or DDPM update moves <code>xt</code> one step toward clean data. The loop repeats until the timestep reaches 0.</p>
-  </div>
+  <nav class="toc" aria-label="頁內目錄">
+    <a href="#big-picture">整條 pipeline</a>
+    <a href="#four-equations">四條核心公式</a>
+    <a href="#t-vs-nfe">T vs NFE</a>
+    <a href="#sampling">DDIM / DDPM / η</a>
+    <a href="#oracle">Oracle score</a>
+    <a href="#code-map">14 個 code pieces</a>
+    <a href="#variables">變數表</a>
+    <a href="#debug">讀 code checklist</a>
+  </nav>
 
-  <h2>Overview of all 14</h2>
-  <div class="table-wrap overview"><table>
-    <tr><th>Group</th><th>Name</th><th>One-line job</th></tr>
-    <tr><td>Schedule</td><td><a href="#en-make_diffusion_schedule"><code>make_diffusion_schedule</code></a></td><td>Precompute the noise-level table.</td></tr>
-    <tr><td>Schedule</td><td><a href="#en-make_sampling_timesteps"><code>make_sampling_timesteps</code></a></td><td>Choose which timesteps sampling actually visits.</td></tr>
-    <tr><td>Model</td><td><a href="#en-NoisePredictorMLP"><code>NoisePredictorMLP</code></a></td><td>The trainable noise-guessing network.</td></tr>
-    <tr><td>Model</td><td><a href="#en-OracleNoiseModel"><code>OracleNoiseModel</code></a></td><td>A non-trained model that computes the exact answer from the GMM formula.</td></tr>
-    <tr><td>Training</td><td><a href="#en-make_diffusion_batch"><code>make_diffusion_batch</code></a></td><td>Build one batch of (noisy sample, true noise) pairs.</td></tr>
-    <tr><td>Training</td><td><a href="#en-train_diffusion_model"><code>train_diffusion_model</code></a></td><td>The standard training loop.</td></tr>
-    <tr><td>Sampling</td><td><a href="#en-ddpm_jump_posterior"><code>ddpm_jump_posterior</code></a></td><td>Mean and variance for one reverse jump.</td></tr>
-    <tr><td>Sampling</td><td><a href="#en-sample_ddim"><code>sample_ddim</code></a></td><td>Deterministic sampler, no fresh noise.</td></tr>
-    <tr><td>Sampling</td><td><a href="#en-sample_eta"><code>sample_eta</code></a></td><td>Sampler with a dial for how much fresh noise to add.</td></tr>
-    <tr><td>Sampling</td><td><a href="#en-sample_sigma_hat"><code>sample_sigma_hat</code></a></td><td>Sampler using the larger variance choice from the paper.</td></tr>
-    <tr><td>Sampling</td><td><a href="#en-sample_ddpm"><code>sample_ddpm</code></a></td><td>Ancestral sampler, full fresh noise each step.</td></tr>
-    <tr><td>Variants</td><td><a href="#en-make_anisotropic_diffusion_batch"><code>make_anisotropic_diffusion_batch</code></a></td><td>Batch builder for the anisotropic target.</td></tr>
-    <tr><td>Variants</td><td><a href="#en-train_anisotropic_diffusion_model"><code>train_anisotropic_diffusion_model</code></a></td><td>Training loop for the anisotropic target.</td></tr>
-    <tr><td>Variants</td><td><a href="#en-train_diffusion_model_on_dataset"><code>train_diffusion_model_on_dataset</code></a></td><td>Training loop that only sees a fixed finite dataset.</td></tr>
-  </table></div>
+  <section id="big-picture">
+    <h2>1. 整條 pipeline</h2>
+    <div class="pipeline">
+      <div class="pipe"><b>clean data</b><span class="small"><code>x₀</code> from GMM</span></div>
+      <div class="pipe"><b>forward noise</b><span class="small"><code>make_diffusion_batch</code> → <code>x_t</code></span></div>
+      <div class="pipe"><b>predict noise</b><span class="small"><code>NoisePredictorMLP(x_t,t)</code> → <code>ε̂</code></span></div>
+      <div class="pipe"><b>estimate clean</b><span class="small"><code>ε̂</code> + <code>x_t</code> → <code>x̂₀</code></span></div>
+      <div class="pipe"><b>reverse update</b><span class="small">DDIM / DDPM / η → <code>x_s</code></span></div>
+    </div>
 
-  <h2 id="en-shared-variables">Shared variables, read this table first</h2>
-  <p>These variables appear across many functions with the same meaning, so they are explained once here. Each card below only lists the variables unique to that function.</p>
-  <div class="table-wrap"><table>
-    <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-    <tr><td><code>alpha_bars</code></td><td>The schedule lookup table, telling how much of the original data remains after t steps. Built by <code>make_diffusion_schedule</code>.</td><td>tensor, length T+1</td></tr>
-    <tr><td><code>cfg</code></td><td>GMM settings such as dimension, number of components, and spacing</td><td>GMMConfig</td></tr>
-    <tr><td><code>means</code></td><td>The K component means of the target GMM</td><td>tensor (K, dim)</td></tr>
-    <tr><td><code>model</code></td><td>The noise predictor, a trained <code>NoisePredictorMLP</code> or the oracle</td><td>nn.Module</td></tr>
-    <tr><td><code>x0</code></td><td>Clean samples</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>x_t</code> / <code>x</code></td><td>Noisy samples (called <code>x</code> inside sampler loops)</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>t</code>, <code>s</code></td><td>Integer timesteps; one reverse jump goes from t down to s</td><td>int</td></tr>
-    <tr><td><code>t_model</code></td><td>t divided by T, the 0-to-1 version of time the model receives</td><td>tensor (n, 1)</td></tr>
-    <tr><td><code>noise</code></td><td>The noise injected during training = the correct answer the model is graded against</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>predicted_noise</code></td><td>The model's output, eps_hat</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>x0_hat</code></td><td>Clean-sample estimate backed out from eps_hat</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>nfe</code></td><td>Number of reverse steps sampling actually takes (= model calls)</td><td>int</td></tr>
-    <tr><td><code>batch_size</code> / <code>n_samples</code></td><td>Samples per training batch / samples to generate</td><td>int</td></tr>
-    <tr><td><code>seed</code> / <code>noise_seed</code> / <code>ancestral_seed</code></td><td>Random seeds, so runs are reproducible</td><td>int</td></tr>
-    <tr><td><code>timesteps</code></td><td>The descending step list from <code>make_sampling_timesteps</code></td><td>tensor, length nfe+1</td></tr>
-    <tr><td><code>step_noise</code></td><td>Fresh Gaussian noise a stochastic sampler draws at each step</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>posterior_mean</code>, <code>posterior_variance</code></td><td>The two outputs of <code>ddpm_jump_posterior</code></td><td>tensors</td></tr>
-  </table></div>
+    <div class="callout good"><b>Training 和 sampling 學的不是同一件事。</b> Training 的 supervised target 是「剛才加進去的 noise ε」。Sampling 才拿 model 的 prediction <code>ε̂</code> 去反推 clean sample，然後一步一步生成資料。</div>
+  </section>
 
-  <h2>Schedule</h2>
+  <section id="four-equations">
+    <h2>2. 四條核心公式</h2>
+    <div class="formula-grid">
+      <div class="formula">
+        <h3>A. Schedule</h3>
+        <div class="eq">αₜ = 1 − βₜ &nbsp;&nbsp;&nbsp; ᾱₜ = ∏ᵢ₌₁ᵗ αᵢ</div>
+        <div class="why"><code>ᾱₜ</code> 是最重要的 lookup value：到了 timestep t，原始 signal 還剩多少。</div>
+      </div>
+      <div class="formula">
+        <h3>B. Forward marginal</h3>
+        <div class="eq">xₜ = √ᾱₜ x₀ + √(1−ᾱₜ) ε</div>
+        <div class="why">不用真的一步一步加 noise。給定任何 t，可以直接從 clean <code>x₀</code> 做出那個 noise level 的 <code>x_t</code>。</div>
+      </div>
+      <div class="formula">
+        <h3>C. Training objective</h3>
+        <div class="eq">L(θ) = E || ε − ε̂θ(xₜ,t) ||²</div>
+        <div class="why">因為 noise 是我們自己抽的，所以 ground truth ε 已知。model 就做 regression。</div>
+      </div>
+      <div class="formula">
+        <h3>D. Clean estimate</h3>
+        <div class="eq">x̂₀ = [xₜ − √(1−ᾱₜ) ε̂] / √ᾱₜ</div>
+        <div class="why">Sampling 時每一步都會先做這件事：用 model 猜到的 noise 把 clean sample 倒推出來。</div>
+      </div>
+    </div>
+  </section>
 
-  <div class="card fn" id="en-make_diffusion_schedule">
-    <h3><code>make_diffusion_schedule(num_steps, beta_start, beta_end)</code></h3>
-    <p><b>What it does.</b> Training needs a lookup table answering "how much noise belongs at step t", and this function does exactly one thing, computing that table in advance.</p>
-    <p>It outputs three sequences. The first is <code>betas</code>, the fraction of <em>new</em> noise injected at each step.</p>
-    <p>The second is <code>alphas</code>, defined as 1 minus <code>betas</code>, which is the fraction of signal <em>kept</em> at each step.</p>
-    <p>The third is <code>alpha_bars</code>, the running product of <code>alphas</code> from step 1 up to step t. It answers "after t steps, how much of the original data is still left". Every sampler looks this one up.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>num_steps</code></td><td>Total number of steps (T)</td><td>int</td></tr>
-      <tr><td><code>beta_start</code></td><td>Noise fraction at step 1</td><td>float</td></tr>
-      <tr><td><code>beta_end</code></td><td>Noise fraction at the last step</td><td>float</td></tr>
-      <tr><td><code>betas</code></td><td>New noise per step; slot 0 is 0</td><td>tensor, length T+1</td></tr>
-      <tr><td><code>alphas</code></td><td>Signal kept per step, = 1 − betas</td><td>tensor, length T+1</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> Its <code>alpha_bars</code> output is the shared table everyone reads, since <code>make_diffusion_batch</code> uses it to decide how much noise to add and all four samplers read it at every reverse step.</p>
-  </div>
+  <section id="t-vs-nfe">
+    <h2>3. <code>T</code> 和 <code>NFE</code> 不要混在一起</h2>
+    <div class="compare">
+      <div class="compare-card">
+        <h3><strong>T = diffusion schedule resolution</strong></h3>
+        <p>目前 code 是 <code>T=300</code>。Schedule 裡有 300 個 forward noise levels，training 會隨機抽其中一個 t。</p>
+        <p><code>make_diffusion_schedule</code> 建的是這張 0…T 的 noise lookup table。</p>
+      </div>
+      <div class="compare-card">
+        <h3><strong>NFE = sampling model calls</strong></h3>
+        <p>目前比較 <code>NFE = 1, 5, 20, 100</code>。Sampling 不必走完 300 個 timestep；它用 <code>make_sampling_timesteps</code> 從 T 到 0 挑出 NFE 個 reverse jumps。</p>
+        <p>所以 <code>T=300</code> 不代表 sampling 一定跑 300 次 model。</p>
+      </div>
+    </div>
 
-  <div class="card fn" id="en-make_sampling_timesteps">
-    <h3><code>make_sampling_timesteps(num_diffusion_steps, nfe)</code></h3>
-    <p><b>What it does.</b> Sampling does not have to walk through all T steps. NFE (number of function evaluations, meaning how many times the model gets called) sets how many steps we actually take.</p>
-    <p>The function picks nfe+1 timestep indices, evenly spaced from T down to 0, in decreasing order. Consecutive pairs in that list become the (t, s) jumps every sampler loops over.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>num_diffusion_steps</code></td><td>Total training steps (T)</td><td>int</td></tr>
-      <tr><td>return value</td><td>Timesteps T = t0 &gt; t1 &gt; … &gt; 0</td><td>tensor, length nfe+1</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> Called at the start of <code>sample_ddim</code>, <code>sample_eta</code>, <code>sample_sigma_hat</code>, and <code>sample_ddpm</code>.</p>
-  </div>
+    <div class="callout warning">
+      <b>為什麼現在 T=300 還乘 <code>1000/300</code>？</b>
+      Textbook linear β range <code>1e-4 → .02</code> 原本是 1000-step 設定。現在用 300 steps，所以 β range 乘 <code>1000/300</code>，目的是讓 terminal noise level 大致接近 textbook 1000-step process，而不是單純把 process 截短。
+    </div>
 
-  <h2>Models</h2>
+    <pre><code># experiments/common.py
+NUM_DIFFUSION_STEPS = 300
+BETA_START = 1e-4 * 1000 / NUM_DIFFUSION_STEPS
+BETA_END   = 0.02 * 1000 / NUM_DIFFUSION_STEPS
+NFE_VALUES = [1, 5, 20, 100]</code></pre>
+  </section>
 
-  <div class="card fn" id="en-NoisePredictorMLP">
-    <h3><code>NoisePredictorMLP(data_dim, hidden_dim=128)</code></h3>
-    <p><b>What it does.</b> This is the trainable network. It is an MLP (multi-layer perceptron, plain fully-connected layers and nothing fancier).</p>
-    <p>The input is the noisy sample <code>x</code> and the time <code>t_model</code> concatenated into one vector, and the output is a guess of the noise hiding inside <code>x</code>, with the same dimension as the data.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>data_dim</code></td><td>Dimension of the data (2 or 32 in this project)</td><td>int</td></tr>
-      <tr><td><code>hidden_dim</code></td><td>Width of the hidden layers</td><td>int, default 128</td></tr>
-      <tr><td><code>self.net</code></td><td>4 Linear layers with SiLU activations between</td><td>nn.Sequential</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> Trained by the three training functions; called inside every sampler loop.</p>
-  </div>
+  <section id="sampling">
+    <h2>4. DDIM、DDPM、η 到底差在哪</h2>
+    <p>三者每一步前半段其實一樣：拿現在的 <code>x_t</code> → model 預測 <code>ε̂</code> → 算 <code>x̂₀</code>。真正不同的是「怎麼從 t 更新到下一個 s」。</p>
 
-  <div class="card fn" id="en-OracleNoiseModel">
-    <h3><code>OracleNoiseModel(means, alpha_bars, sigma0)</code> <span class="note">(new, task 011)</span></h3>
-    <p><b>What it does.</b> This model is not trained. It computes the mathematically correct noise prediction directly from the known GMM formula.</p>
-    <p>The reason it exists is that a normal experiment mixes two error sources, the model learning imperfectly and the sampler itself losing accuracy. Swapping in the oracle sets the first one to exactly zero, so whatever error remains belongs to the sampler alone.</p>
-    <p>The forward pass goes step by step. Step 1, convert the 0-to-1 time <code>t_model</code> back to an integer step <code>t</code>, and look up <code>abar</code> in the table.</p>
-    <p>Step 2, compute <code>s2</code>, the variance each GMM component has at step t. It combines the component's own spread (shrunk by abar) with the injected noise.</p>
-    <p>Step 3, compute <code>centers</code>, which is where each component's mean sits at step t (the original means shrunk by √abar).</p>
-    <p>Step 4, for every sample and every component, compute the squared distance <code>sqr_dist</code>, turn it into <code>log_density</code>, and apply softmax. The result <code>corresponding_prob</code> is "the probability this sample came from component k".</p>
-    <p>Step 5, a single Gaussian's score (the gradient of log density) is (center − x) / variance. For a mixture, average those per-component scores using the probabilities from step 4, which gives <code>score</code>.</p>
-    <p>Step 6, convert score to a noise prediction with eps_hat = −√(1−abar) · score, and return it.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>sigma0</code></td><td>Each component's standard deviation at t=0</td><td>float</td></tr>
-      <tr><td><code>abar</code></td><td>alpha_bars[t]</td><td>scalar tensor</td></tr>
-      <tr><td><code>s2</code></td><td>Per-component variance at step t</td><td>scalar tensor</td></tr>
-      <tr><td><code>centers</code></td><td>Component means shrunk to step t</td><td>tensor (K, dim)</td></tr>
-      <tr><td><code>diff</code></td><td>x minus every center</td><td>tensor (n, K, dim)</td></tr>
-      <tr><td><code>sqr_dist</code></td><td>Squared distance to every center</td><td>tensor (n, K)</td></tr>
-      <tr><td><code>log_density</code></td><td>Log density up to a constant</td><td>tensor (n, K)</td></tr>
-      <tr><td><code>corresponding_prob</code></td><td>P(component k | sample i)</td><td>tensor (n, K)</td></tr>
-      <tr><td><code>score</code></td><td>Mixture score at each sample</td><td>tensor (n, dim)</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> Drop-in replacement for <code>NoisePredictorMLP</code> in any sampler; used by <code>experiments/eta_sweep_oracle.py</code>.</p>
-  </div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Sampler</th><th>Fresh random noise?</th><th>核心想法</th><th>Project 裡的角色</th></tr>
+        <tr><td><code>sample_ddim</code></td><td>No</td><td>deterministic path；重用 predicted noise</td><td>η = 0 endpoint</td></tr>
+        <tr><td><code>sample_eta</code></td><td>Controlled by η</td><td>η 從 0 到 1 調 stochasticity</td><td>Task 006 mechanism sweep</td></tr>
+        <tr><td><code>sample_ddpm</code></td><td>Yes</td><td>從 respaced jump posterior 抽樣</td><td>η = 1 endpoint</td></tr>
+        <tr><td><code>sample_sigma_hat</code></td><td>Yes, larger variance</td><td>用 DDIM paper Table 1 的較大 variance choice</td><td>stochasticity control</td></tr>
+      </table>
+    </div>
 
-  <h2>Training</h2>
+    <div class="formula">
+      <h3>Generalized η update</h3>
+      <div class="eq">xₛ = √ᾱₛ x̂₀ + √(1−ᾱₛ−σ²) ε̂ + σz</div>
+      <p><code>σ = η √posterior_variance</code>。η=0 時最後一項消失，就是 deterministic DDIM；η=1 時對應 DDPM jump posterior 的 stochasticity。</p>
+    </div>
 
-  <div class="card fn" id="en-make_diffusion_batch">
-    <h3><code>make_diffusion_batch(batch_size, cfg, means, alpha_bars)</code></h3>
-    <p><b>What it does.</b> Builds one batch of training examples, in four moves.</p>
-    <p>Move 1, draw clean samples <code>x0</code> from the GMM.</p>
-    <p>Move 2, for each sample, pick a random timestep <code>t_indices</code> between 1 and T.</p>
-    <p>Move 3, draw standard Gaussian <code>noise</code>.</p>
-    <p>Move 4, mix them with the forward formula x_t = √ᾱ_t·x0 + √(1−ᾱ_t)·noise.</p>
-    <p>One key point is that <code>noise</code> is returned along with <code>x_t</code>, because the drawn noise <em>is</em> the correct answer the model will be graded against.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>t_indices</code></td><td>Random integer timesteps, one per sample</td><td>tensor (n,)</td></tr>
-      <tr><td><code>alpha_bar_t</code></td><td>ᾱ looked up at each sample's own timestep</td><td>tensor (n, 1)</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> Called every step inside <code>train_diffusion_model</code>.</p>
-  </div>
+    <div class="callout"><b>為什麼 Task 006 有意義？</b> Learned model 中 η 越大 SWD 越低；換成 exact oracle score 後，某些 NFE 的方向反轉。這讓我們可以問：stochasticity 是在補 learned-model error，還是在處理 finite-step sampler error？</div>
+  </section>
 
-  <div class="card fn" id="en-train_diffusion_model">
-    <h3><code>train_diffusion_model(cfg, seed, alpha_bars, …)</code></h3>
-    <p><b>What it does.</b> The standard training loop. Each iteration gets a fresh batch from <code>make_diffusion_batch</code>, lets the model predict the noise, measures the mean squared difference between prediction and true noise, and lets Adam (the optimizer) update the weights.</p>
-    <p>Because every batch draws brand-new GMM samples, this loop effectively trains on unlimited data.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>training_steps</code></td><td>Number of optimizer updates</td><td>int, default 3000</td></tr>
-      <tr><td><code>learning_rate</code></td><td>Adam step size</td><td>float, default 2e-3</td></tr>
-      <tr><td><code>hidden_dim</code></td><td>Width passed to the MLP</td><td>int, default 128</td></tr>
-      <tr><td><code>loss</code></td><td>Mean squared error vs true noise</td><td>scalar tensor</td></tr>
-      <tr><td><code>loss_history</code></td><td>Loss value at every step</td><td>list of float</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> Returns (model, means, loss_history); the trained model is what every sampler receives.</p>
-  </div>
+  <section id="oracle">
+    <h2>5. Oracle score 是什麼</h2>
+    <p><code>OracleNoiseModel</code> 不需要 training。因為 GMM 加 Gaussian noise 後仍然是 GMM，所以在任意 t，我們知道每個 component 的新 center 和 variance，也能算 exact score。</p>
 
-  <h2>Sampling</h2>
+    <div class="formula-grid">
+      <div class="formula">
+        <h3>Noised component</h3>
+        <div class="eq">centerₖ(t) = √ᾱₜ μₖ</div>
+        <div class="eq">sₜ² = ᾱₜ σ₀² + (1−ᾱₜ)</div>
+      </div>
+      <div class="formula">
+        <h3>Score → noise prediction</h3>
+        <div class="eq">ε̂ = −√(1−ᾱₜ) · score(xₜ,t)</div>
+        <div class="why">所以 oracle 可以直接塞進同一套 DDIM / DDPM / η sampler；唯一換掉的是 learned network。</div>
+      </div>
+    </div>
 
-  <div class="card fn" id="en-ddpm_jump_posterior">
-    <h3><code>ddpm_jump_posterior(x_t, x0_hat, t, s, alpha_bars)</code></h3>
-    <p><b>What it does.</b> A helper used inside sampler loops. Given the current noisy sample <code>x_t</code> and the current estimate of the clean sample <code>x0_hat</code>, it answers the question of what distribution x_s should follow if we jump from step t to step s.</p>
-    <p>The answer is a Gaussian, so the function returns two things, the <code>mean</code> and the <code>variance</code>.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>alpha_jump</code></td><td>ᾱ_t / ᾱ_s, the fraction of signal this particular jump keeps</td><td>scalar tensor</td></tr>
-      <tr><td><code>mean</code></td><td>Posterior mean, a weighted mix of x0_hat and x_t</td><td>tensor (n, dim)</td></tr>
-      <tr><td><code>variance</code></td><td>Posterior variance σ̃²</td><td>scalar tensor</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> Called by <code>sample_ddpm</code>, <code>sample_eta</code>, and <code>sample_sigma_hat</code>.</p>
-  </div>
+    <div class="callout good">這是很乾淨的 control：如果 learned model 和 oracle 的 η effect 不一樣，差異就不能全部怪 sampler formula；model approximation error 也是候選來源。</div>
+  </section>
 
-  <div class="card fn" id="en-sample_ddim">
-    <h3><code>sample_ddim(model, n_samples, cfg, nfe, alpha_bars, …)</code></h3>
-    <p><b>What it does.</b> The deterministic sampler. Deterministic means that no fresh randomness is added during the loop, so the same starting noise always produces the same output.</p>
-    <p>Each loop iteration does three things. First, the model predicts the noise in the current <code>x</code>.</p>
-    <p>Second, that prediction is used to back out an estimate of the clean sample, x0_hat = (x − √(1−ᾱ_t)·eps_hat) / √ᾱ_t.</p>
-    <p>Third, the DDIM update rebuilds x at the next step s, x = √ᾱ_s·x0_hat + √(1−ᾱ_s)·eps_hat. It reuses the <em>predicted</em> noise instead of drawing new noise, and that is exactly what makes it deterministic.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>initial_noise</code></td><td>Optional fixed starting noise; if None, drawn fresh</td><td>tensor or None</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> Produces generated samples for evaluation; the η=0 endpoint of the eta sweep.</p>
-  </div>
+  <section id="code-map">
+    <h2>6. <code>src/diffusion.py</code> 的 14 個主要 pieces</h2>
+    <p>先按角色分組，再展開你現在需要的 function。不要從檔案第一行一路讀到底。</p>
 
-  <div class="card fn" id="en-sample_eta">
-    <h3><code>sample_eta(model, n_samples, cfg, nfe, alpha_bars, eta, …)</code></h3>
-    <p><b>What it does.</b> A sampler with a dial. The dial is <code>eta</code>, a number from 0 to 1 controlling how much fresh noise gets injected at each reverse step.</p>
-    <p>At eta = 0 it reproduces DDIM (no fresh noise). At eta = 1 it matches the DDPM jump posterior (full fresh noise). Values in between interpolate.</p>
-    <p>Concretely, each step sets sigma = eta · √(posterior variance), then combines three ingredients, the clean estimate x0_hat, the predicted noise (weighted by <code>noise_coef</code>), and brand-new random noise <code>step_noise</code> (weighted by sigma).</p>
-    <p>There are two implementation details I want to mention. The clamp inside <code>noise_coef</code> only protects the square root from tiny negative rounding errors.</p>
-    <p>The other one is that <code>step_noise</code> is drawn every step even when eta = 0 makes it unused. The reason is that all eta settings then consume the same random number stream, so differences between eta values come from eta alone and not from different random draws. This technique is called common random numbers.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>eta</code></td><td>The 0-to-1 fresh-noise dial</td><td>float</td></tr>
-      <tr><td><code>generator</code></td><td>Dedicated random stream for step noise</td><td>torch.Generator</td></tr>
-      <tr><td><code>sigma</code></td><td>eta · √posterior_variance, the fresh-noise scale</td><td>scalar tensor</td></tr>
-      <tr><td><code>noise_coef</code></td><td>√(1 − ᾱ_s − σ²), weight on predicted noise</td><td>scalar tensor</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> Uses <code>ddpm_jump_posterior</code>; the sampler behind the task 010/011 eta sweeps.</p>
-  </div>
+    <div class="code-map">
+      <div class="group">
+        <div class="group-title">Schedule</div>
+        <ul class="fn-list">
+          <li><a href="#fn-schedule"><code>make_diffusion_schedule</code></a> — 建 β / α / ᾱ table</li>
+          <li><a href="#fn-timesteps"><code>make_sampling_timesteps</code></a> — 用 NFE 挑 reverse jumps</li>
+        </ul>
+      </div>
+      <div class="group">
+        <div class="group-title">Models</div>
+        <ul class="fn-list">
+          <li><a href="#fn-mlp"><code>NoisePredictorMLP</code></a> — learned ε predictor</li>
+          <li><a href="#fn-oracle"><code>OracleNoiseModel</code></a> — exact GMM score control</li>
+        </ul>
+      </div>
+      <div class="group">
+        <div class="group-title">Standard training</div>
+        <ul class="fn-list">
+          <li><a href="#fn-batch"><code>make_diffusion_batch</code></a> — 做 noisy training pairs</li>
+          <li><a href="#fn-train"><code>train_diffusion_model</code></a> — epsilon-regression loop</li>
+        </ul>
+      </div>
+      <div class="group">
+        <div class="group-title">Sampling</div>
+        <ul class="fn-list">
+          <li><a href="#fn-posterior"><code>ddpm_jump_posterior</code></a> — jump mean / variance</li>
+          <li><a href="#fn-ddim"><code>sample_ddim</code></a> — deterministic</li>
+          <li><a href="#fn-eta"><code>sample_eta</code></a> — stochasticity dial</li>
+          <li><a href="#fn-sigma"><code>sample_sigma_hat</code></a> — larger variance control</li>
+          <li><a href="#fn-ddpm"><code>sample_ddpm</code></a> — ancestral</li>
+        </ul>
+      </div>
+      <div class="group">
+        <div class="group-title">Variants</div>
+        <ul class="fn-list">
+          <li><a href="#fn-aniso-batch"><code>make_anisotropic_diffusion_batch</code></a></li>
+          <li><a href="#fn-aniso-train"><code>train_anisotropic_diffusion_model</code></a></li>
+          <li><a href="#fn-finite"><code>train_diffusion_model_on_dataset</code></a></li>
+        </ul>
+      </div>
+      <div class="group">
+        <div class="group-title">Recommended read order</div>
+        <ul class="fn-list">
+          <li>① schedule</li><li>② make batch</li><li>③ train model</li><li>④ DDIM</li><li>⑤ DDPM posterior + DDPM</li><li>⑥ η</li><li>⑦ oracle</li>
+        </ul>
+      </div>
+    </div>
 
-  <div class="card fn" id="en-sample_sigma_hat">
-    <h3><code>sample_sigma_hat(model, n_samples, cfg, nfe, alpha_bars, …)</code></h3>
-    <p><b>What it does.</b> The loop has the same shape as DDPM. It predicts noise, estimates x0_hat, and takes the posterior <em>mean</em> from <code>ddpm_jump_posterior</code>.</p>
-    <p>The one difference is the variance. Instead of the posterior variance, it uses the larger choice σ̂² = 1 − alpha_jump (the σ̂ row of Table 1 in Song et al. 2021).</p>
-    <p>The reason to keep it is that the paper reports this choice degrades badly when the step count is truncated (small NFE), so it serves as a control in our comparisons.</p>
-    <p><b>Unique variables.</b> Only <code>alpha_jump</code> = ᾱ_t/ᾱ_s reused as the noise scale, √(1−alpha_jump)·step_noise. Everything else is in the shared table.</p>
-    <p><b>Connects to.</b> Uses <code>ddpm_jump_posterior</code> for the mean; an ancestral-sampling control.</p>
-  </div>
+    <details class="function" id="fn-schedule" open>
+      <summary><code>make_diffusion_schedule(num_steps, beta_start, beta_end)</code></summary>
+      <div class="function-body"><span class="tag">Schedule</span><p>建立 <code>betas</code>、<code>alphas</code>、<code>alpha_bars</code>。真正後面一直 lookup 的是 <code>alpha_bars[t]</code>。</p><p><span class="mini-label">Remember</span> β 是每一步新增多少 noise；ᾱ 是到目前為止累積還剩多少 signal。</p></div>
+    </details>
 
-  <div class="card fn" id="en-sample_ddpm">
-    <h3><code>sample_ddpm(model, n_samples, cfg, nfe, alpha_bars, …)</code></h3>
-    <p><b>What it does.</b> Ancestral sampling, meaning that each reverse step draws an actual random sample from the jump posterior rather than following a deterministic rule.</p>
-    <p>Each loop iteration predicts noise, backs out x0_hat, asks <code>ddpm_jump_posterior</code> for mean and variance, then draws x_s = mean + √variance · step_noise.</p>
-    <p>At the final jump (s = 0) no noise is added, and the sampler returns the mean directly.</p>
-    <p><b>Unique variables.</b> None, since everything it uses is in the shared table.</p>
-    <p><b>Connects to.</b> Uses <code>ddpm_jump_posterior</code>; equivalent to <code>sample_eta</code> at eta = 1 (up to random-stream details); produces samples for evaluation.</p>
-  </div>
+    <details class="function" id="fn-timesteps">
+      <summary><code>make_sampling_timesteps(num_diffusion_steps, nfe)</code></summary>
+      <div class="function-body"><span class="tag">Schedule</span><p>把完整的 0…T grid respacing 成 <code>T=t₀ &gt; t₁ &gt; … &gt; t_K=0</code>，其中 K = NFE。</p><p>目前 implementation 是 <code>linspace(T,0,nfe+1).round()</code>。</p></div>
+    </details>
 
-  <h2>Variant pipelines</h2>
+    <details class="function" id="fn-mlp">
+      <summary><code>NoisePredictorMLP</code></summary>
+      <div class="function-body"><span class="tag">Model</span><p>Input 是 noisy sample <code>x_t</code> 加 normalized time <code>t_model</code>；output 維度跟 data 一樣，是 <code>ε̂</code>。</p><p>它不是直接輸出 <code>x₀</code>、density 或 score；目前 training objective 是 epsilon prediction。</p></div>
+    </details>
 
-  <div class="card fn" id="en-make_anisotropic_diffusion_batch">
-    <h3><code>make_anisotropic_diffusion_batch(batch_size, cfg, means, alpha_bars)</code></h3>
-    <p><b>What it does.</b> Identical to <code>make_diffusion_batch</code> except that the clean samples now come from <code>sample_anisotropic_gmm</code>, whose components have stretched (non-circular) covariances.</p>
-    <p>Its return value also drops <code>t_indices</code>, returning only (x_t, t_model, noise).</p>
-    <p><b>Connects to.</b> Called inside <code>train_anisotropic_diffusion_model</code>.</p>
-  </div>
+    <details class="function" id="fn-oracle">
+      <summary><code>OracleNoiseModel</code></summary>
+      <div class="function-body"><span class="tag">Control</span><p>用 noised GMM 的 closed-form density responsibilities 算 exact score，再轉成 <code>ε̂</code>。API 刻意做得跟 learned model 一樣，所以 sampler 不需要改。</p><p><span class="mini-label">Used in</span> Task 006 oracle η sweep。</p></div>
+    </details>
 
-  <div class="card fn" id="en-train_anisotropic_diffusion_model">
-    <h3><code>train_anisotropic_diffusion_model(cfg, seed, alpha_bars, …)</code></h3>
-    <p><b>What it does.</b> The same training loop as <code>train_diffusion_model</code>, with the data source swapped to the anisotropic batch builder. Its hyperparameters (training_steps, batch_size, learning_rate) have no defaults and must be given explicitly.</p>
-    <p><b>Connects to.</b> Produces the model for the anisotropic experiments (tasks 002/008 line).</p>
-  </div>
+    <details class="function" id="fn-batch" open>
+      <summary><code>make_diffusion_batch(batch_size, cfg, means, alpha_bars)</code></summary>
+      <div class="function-body"><span class="tag">Training</span><p>一次做四件事：sample clean <code>x₀</code> → random t → random ε → 用 forward marginal 做出 <code>x_t</code>。</p><p>Return：<code>x_t</code>、integer timestep、normalized <code>t_model</code>、ground-truth <code>noise</code>。</p></div>
+    </details>
 
-  <div class="card fn" id="en-train_diffusion_model_on_dataset">
-    <h3><code>train_diffusion_model_on_dataset(train_data, cfg, seed, alpha_bars, …)</code></h3>
-    <p><b>What it does.</b> The finite-data twin of <code>train_diffusion_model</code>. The difference is one line, because instead of drawing brand-new GMM samples each step, every batch is resampled from a fixed dataset <code>train_data</code>.</p>
-    <p>This is the tool for studying what changes when training data is limited. It returns only the model.</p>
-    <p><b>Unique variables.</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>Variable</th><th>Holds</th><th>Type</th></tr>
-      <tr><td><code>train_data</code></td><td>The fixed finite training set</td><td>tensor (N, dim)</td></tr>
-    </table></div>
-    <p><b>Connects to.</b> The finite-data experiments (tasks 004/006 line).</p>
-  </div>
+    <details class="function" id="fn-train" open>
+      <summary><code>train_diffusion_model(...)</code></summary>
+      <div class="function-body"><span class="tag">Training</span><p>標準 training loop：batch → <code>predicted_noise = model(x_t,t_model)</code> → MSE against ε → backprop。</p><pre><code>x_t, _, t_model, noise = make_diffusion_batch(...)
+predicted_noise = model(x_t, t_model)
+loss = ((predicted_noise - noise) ** 2).mean()</code></pre></div>
+    </details>
 
-  <h2>Three templates to recognise</h2>
-  <div class="templates">
-    <div class="card"><h3>Schedule</h3><pre><code>coefficients = build_schedule(...)
-alpha_bar_t = coefficients[t]
-result = formula(alpha_bar_t, x)</code></pre></div>
-    <div class="card"><h3>Training</h3><pre><code>prediction = model(inputs)
-loss = compare(prediction, target)
-optimizer.zero_grad()
-loss.backward()
-optimizer.step()</code></pre></div>
-    <div class="card"><h3>Sampling</h3><pre><code>model.eval()
-for t, s in reverse_steps:
-    eps_hat = model(x, t)
-    x0_hat = estimate_clean(...)
-    x = reverse_update(...)</code></pre></div>
-  </div>
-</main>
-<main class="zh">
-  <div class="language-switch"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
-  <h1>Diffusion.py 教學</h1>
-  <div class="meta"><code>src/diffusion.py</code> 的 14 個主要函式與類別，一次一個。共用變數集中在一張表解釋一次，之後每個條目有三塊，它在幹嘛、獨有變數、它連到誰。</div>
-  <nav class="nav"><a href="tasks.html">任務</a><b>Diffusion.py 教學</b></nav>
+    <details class="function" id="fn-posterior">
+      <summary><code>ddpm_jump_posterior(x_t, x0_hat, t, s, alpha_bars)</code></summary>
+      <div class="function-body"><span class="tag">Sampling</span><p>因為 sampling 可能從 t 一口氣跳到較早的 s，不只走相鄰 timestep，所以這裡算的是 respaced jump posterior 的 mean 和 variance。</p><p>DDPM、η sampler、<code>sigma_hat</code> 都會用到它。</p></div>
+    </details>
 
-  <div class="card status"><p><b>核心概念可以拆成兩句來講。</b>訓練的時候，拿乾淨資料，加上我們知道確切數值的 noise，教 model 把那份 noise 猜回來。sampling 的時候，從純 random noise 出發，請訓練好的 model 估計裡面的 noise，去掉一部分，重複到只剩乾淨資料。</p></div>
+    <details class="function" id="fn-ddim" open>
+      <summary><code>sample_ddim(...)</code></summary>
+      <div class="function-body"><span class="tag">Sampling</span><p>每一步：predict ε → 算 <code>x̂₀</code> → 用 deterministic DDIM update 得到 <code>x_s</code>。沒有 fresh <code>step_noise</code>。</p><p><span class="mini-label">Endpoint</span> 等於 <code>sample_eta(..., eta=0)</code>。</p></div>
+    </details>
 
-  <h2>這些東西怎麼連起來</h2>
-  <svg class="flow" viewBox="0 0 840 250" role="img" aria-label="Diffusion 訓練與 sampling 流程">
-    <defs><marker id="arrow-zh" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" style="fill:var(--muted)"/></marker></defs>
-    <g style="fill:none">
-      <rect x="20" y="40" width="130" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <rect x="205" y="40" width="150" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <rect x="410" y="40" width="180" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <rect x="645" y="40" width="170" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <rect x="570" y="155" width="245" height="62" rx="6" style="fill:var(--card);stroke:var(--accent);stroke-width:2"/>
-      <line x1="150" y1="71" x2="205" y2="71" style="stroke:var(--muted);stroke-width:2" marker-end="url(#arrow-zh)"/>
-      <line x1="355" y1="71" x2="410" y2="71" style="stroke:var(--muted);stroke-width:2" marker-end="url(#arrow-zh)"/>
-      <line x1="590" y1="71" x2="645" y2="71" style="stroke:var(--muted);stroke-width:2" marker-end="url(#arrow-zh)"/>
-      <line x1="730" y1="102" x2="730" y2="155" style="stroke:var(--muted);stroke-width:2" marker-end="url(#arrow-zh)"/>
-    </g>
-    <g style="font:600 15px Segoe UI,sans-serif;fill:var(--fg)">
-      <text x="85" y="68" text-anchor="middle">clean x0</text>
-      <text x="280" y="68" text-anchor="middle">noisy xt</text>
-      <text x="500" y="68" text-anchor="middle">NoisePredictorMLP</text>
-      <text x="730" y="68" text-anchor="middle">predicted noise</text>
-      <text x="692" y="183" text-anchor="middle">DDIM / DDPM update</text>
-    </g>
-    <g style="font:13px Segoe UI,sans-serif;fill:var(--muted)">
-      <text x="85" y="88" text-anchor="middle">GMM sample</text>
-      <text x="280" y="88" text-anchor="middle">make batch</text>
-      <text x="500" y="88" text-anchor="middle">model(xt, t)</text>
-      <text x="730" y="88" text-anchor="middle">eps_hat</text>
-      <text x="692" y="203" text-anchor="middle">xt → x0_hat → xs</text>
-      <text x="20" y="145">訓練學的是 eps_hat。sampling 重複 reverse update 直到 s = 0。</text>
-    </g>
-  </svg>
-  <div class="card">
-    <p>這張圖建議一次讀一個箭頭。</p>
-    <p>箭頭 1，乾淨樣本 <code>x0</code> 來自 GMM (Gaussian mixture model，由好幾個高斯分布加權組成的分布)。<code>make_diffusion_batch</code> 對它加入數值已知的 noise，得到 <code>xt</code>。</p>
-    <p>箭頭 2，<code>xt</code> 和時間 <code>t</code> 一起送進 <code>NoisePredictorMLP</code>。</p>
-    <p>箭頭 3，model 輸出 <code>eps_hat</code>，也就是它對「剛剛加了什麼 noise」的猜測。</p>
-    <p>箭頭 4 只在 sampling 時發生。用猜到的 noise 反推乾淨樣本的估計值 <code>x0_hat</code>，再由 DDIM 或 DDPM update 把 <code>xt</code> 往乾淨資料推進一步，重複到時間步走到 0。</p>
-  </div>
+    <details class="function" id="fn-eta" open>
+      <summary><code>sample_eta(..., eta, ...)</code></summary>
+      <div class="function-body"><span class="tag">Sampling</span><p>把 DDIM 到 DDPM 放在同一條連續軸上。<code>eta=0</code> deterministic；<code>eta=1</code> 對應 DDPM jump posterior stochasticity。</p><p>Implementation 每一步都抽 <code>step_noise</code>，即使 η=0 用不到，這樣不同 η setting 消耗同一條 random stream，降低 comparison 中的 random-number confound。</p></div>
+    </details>
 
-  <h2>14 個成員總覽</h2>
-  <div class="table-wrap overview"><table>
-    <tr><th>分組</th><th>名稱</th><th>一句話工作</th></tr>
-    <tr><td>Schedule</td><td><a href="#zh-make_diffusion_schedule"><code>make_diffusion_schedule</code></a></td><td>事先算好 noise 比例對照表。</td></tr>
-    <tr><td>Schedule</td><td><a href="#zh-make_sampling_timesteps"><code>make_sampling_timesteps</code></a></td><td>決定 sampling 實際走哪幾步。</td></tr>
-    <tr><td>Model</td><td><a href="#zh-NoisePredictorMLP"><code>NoisePredictorMLP</code></a></td><td>可訓練的 noise 預測網路。</td></tr>
-    <tr><td>Model</td><td><a href="#zh-OracleNoiseModel"><code>OracleNoiseModel</code></a></td><td>不用訓練、直接由 GMM 公式算出正確答案的 model。</td></tr>
-    <tr><td>Training</td><td><a href="#zh-make_diffusion_batch"><code>make_diffusion_batch</code></a></td><td>造一批 (noisy 樣本, 真 noise) 的配對。</td></tr>
-    <tr><td>Training</td><td><a href="#zh-train_diffusion_model"><code>train_diffusion_model</code></a></td><td>標準 training loop。</td></tr>
-    <tr><td>Sampling</td><td><a href="#zh-ddpm_jump_posterior"><code>ddpm_jump_posterior</code></a></td><td>算一次 reverse 跳躍的 mean 與 variance。</td></tr>
-    <tr><td>Sampling</td><td><a href="#zh-sample_ddim"><code>sample_ddim</code></a></td><td>deterministic sampler，不加新 noise。</td></tr>
-    <tr><td>Sampling</td><td><a href="#zh-sample_eta"><code>sample_eta</code></a></td><td>有旋鈕的 sampler，控制每步加多少新 noise。</td></tr>
-    <tr><td>Sampling</td><td><a href="#zh-sample_sigma_hat"><code>sample_sigma_hat</code></a></td><td>採用論文裡較大 variance 選擇的 sampler。</td></tr>
-    <tr><td>Sampling</td><td><a href="#zh-sample_ddpm"><code>sample_ddpm</code></a></td><td>ancestral sampler，每步加足量新 noise。</td></tr>
-    <tr><td>變形版</td><td><a href="#zh-make_anisotropic_diffusion_batch"><code>make_anisotropic_diffusion_batch</code></a></td><td>非等向 target 用的 batch 生產器。</td></tr>
-    <tr><td>變形版</td><td><a href="#zh-train_anisotropic_diffusion_model"><code>train_anisotropic_diffusion_model</code></a></td><td>非等向 target 用的 training loop。</td></tr>
-    <tr><td>變形版</td><td><a href="#zh-train_diffusion_model_on_dataset"><code>train_diffusion_model_on_dataset</code></a></td><td>只看得到固定有限資料集的 training loop。</td></tr>
-  </table></div>
+    <details class="function" id="fn-sigma">
+      <summary><code>sample_sigma_hat(...)</code></summary>
+      <div class="function-body"><span class="tag">Control</span><p>Mean 還是用 DDPM jump posterior，但 variance 改成較大的 <code>1 − alpha_jump</code>。它不是「另一個主 sampler」，而是 stochasticity / variance choice 的 control。</p></div>
+    </details>
 
-  <h2 id="zh-shared-variables">共用變數，先讀這張表</h2>
-  <p>下面這些變數在很多函式裡反覆出現，意思都一樣，所以只在這裡解釋一次。之後每張卡片只列那個函式獨有的變數。</p>
-  <div class="table-wrap"><table>
-    <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-    <tr><td><code>alpha_bars</code></td><td>schedule 對照表，記錄經過 t 步之後原始資料還剩多少，由 <code>make_diffusion_schedule</code> 產生</td><td>tensor，長度 T+1</td></tr>
-    <tr><td><code>cfg</code></td><td>GMM 設定，維度、component 數、間距等</td><td>GMMConfig</td></tr>
-    <tr><td><code>means</code></td><td>目標 GMM 的 K 個 component 中心</td><td>tensor (K, dim)</td></tr>
-    <tr><td><code>model</code></td><td>noise predictor，訓練好的 <code>NoisePredictorMLP</code> 或 oracle</td><td>nn.Module</td></tr>
-    <tr><td><code>x0</code></td><td>乾淨樣本</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>x_t</code> / <code>x</code></td><td>noisy 樣本 (sampler 迴圈裡叫 <code>x</code>)</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>t</code>、<code>s</code></td><td>整數時間步，一次 reverse 跳躍是從 t 跳到 s</td><td>int</td></tr>
-    <tr><td><code>t_model</code></td><td>t 除以 T，換算到 0..1 給 model 用的時間</td><td>tensor (n, 1)</td></tr>
-    <tr><td><code>noise</code></td><td>訓練時注入的 noise = 對答案用的正確答案</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>predicted_noise</code></td><td>model 的輸出，即 eps_hat</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>x0_hat</code></td><td>由 eps_hat 反推的乾淨樣本估計</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>nfe</code></td><td>sampling 實際走幾步 (= model 被呼叫幾次)</td><td>int</td></tr>
-    <tr><td><code>batch_size</code> / <code>n_samples</code></td><td>訓練時一批幾個樣本 / sampling 時要生成幾個</td><td>int</td></tr>
-    <tr><td><code>seed</code> / <code>noise_seed</code> / <code>ancestral_seed</code></td><td>固定亂數的種子，讓實驗可重現</td><td>int</td></tr>
-    <tr><td><code>timesteps</code></td><td><code>make_sampling_timesteps</code> 給的遞減時間表</td><td>tensor，長度 nfe+1</td></tr>
-    <tr><td><code>step_noise</code></td><td>stochastic sampler 每一步新抽的高斯 noise</td><td>tensor (n, dim)</td></tr>
-    <tr><td><code>posterior_mean</code>、<code>posterior_variance</code></td><td><code>ddpm_jump_posterior</code> 的兩個輸出</td><td>tensors</td></tr>
-  </table></div>
+    <details class="function" id="fn-ddpm" open>
+      <summary><code>sample_ddpm(...)</code></summary>
+      <div class="function-body"><span class="tag">Sampling</span><p>每一步 predict ε → <code>x̂₀</code> → posterior mean/variance → 抽 <code>x_s = mean + sqrt(variance)·z</code>。最後 s=0 不再加 noise。</p><p><span class="mini-label">Endpoint</span> Algebraically 對應 <code>eta=1</code>；不同 arithmetic path 會造成小的 floating-point difference。</p></div>
+    </details>
 
-  <h2>Schedule</h2>
+    <details class="function" id="fn-aniso-batch">
+      <summary><code>make_anisotropic_diffusion_batch(...)</code></summary>
+      <div class="function-body"><span class="tag">Variant</span><p>跟 standard batch builder 一樣，只是 clean data source 換成 anisotropic GMM。Forward noise formula 不變。</p></div>
+    </details>
 
-  <div class="card fn" id="zh-make_diffusion_schedule">
-    <h3><code>make_diffusion_schedule(num_steps, beta_start, beta_end)</code></h3>
-    <p><b>它在幹嘛。</b>Diffusion 的訓練需要「在第 t 步該加多少 noise」的一張對照表。這個函式的工作就只有一件事，把這張表事先算好。</p>
-    <p>它輸出三個數列。第一個是 <code>betas</code>，代表每一步「新加入的 noise 比例」。</p>
-    <p>第二個是 <code>alphas</code>，定義是 1 減掉 betas。意思是每一步「原訊號保留下來的比例」。</p>
-    <p>第三個是 <code>alpha_bars</code>，是 alphas 從第 1 步累乘到第 t 步的結果。意思是「經過 t 步之後，原始資料還剩下多少比例」。之後所有 sampler 查表查的主要就是它。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>num_steps</code></td><td>總共有幾步 (T)</td><td>int</td></tr>
-      <tr><td><code>beta_start</code></td><td>第 1 步的 noise 比例</td><td>float</td></tr>
-      <tr><td><code>beta_end</code></td><td>最後一步的 noise 比例</td><td>float</td></tr>
-      <tr><td><code>betas</code></td><td>每步新加的 noise 比例，第 0 格是 0</td><td>tensor，長度 T+1</td></tr>
-      <tr><td><code>alphas</code></td><td>每步保留原訊號的比例，= 1 − betas</td><td>tensor，長度 T+1</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b>它的輸出 <code>alpha_bars</code> 就是大家共用的那張表，<code>make_diffusion_batch</code> 用它決定加多少 noise，四個 sampler 每一步 reverse update 也都查它。</p>
-  </div>
+    <details class="function" id="fn-aniso-train">
+      <summary><code>train_anisotropic_diffusion_model(...)</code></summary>
+      <div class="function-body"><span class="tag">Variant</span><p>Training objective 仍是 epsilon MSE；只是 batch builder 換成 anisotropic target。對應 Task 002。</p></div>
+    </details>
 
-  <div class="card fn" id="zh-make_sampling_timesteps">
-    <h3><code>make_sampling_timesteps(num_diffusion_steps, nfe)</code></h3>
-    <p><b>它在幹嘛。</b>sampling 不一定要走完全部 T 步。NFE (number of function evaluations，指 model 總共被呼叫幾次) 決定實際要走幾步。</p>
-    <p>這個函式從 T 到 0 均勻取出 nfe+1 個時間步索引，由大排到小。清單裡相鄰的兩格，就是之後每個 sampler 迴圈裡的一次 (t, s) 跳躍。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>num_diffusion_steps</code></td><td>訓練時的總步數 (T)</td><td>int</td></tr>
-      <tr><td>回傳值</td><td>時間步 T = t0 &gt; t1 &gt; … &gt; 0</td><td>tensor，長度 nfe+1</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b><code>sample_ddim</code>、<code>sample_eta</code>、<code>sample_sigma_hat</code>、<code>sample_ddpm</code> 四個 sampler 開頭都先呼叫它。</p>
-  </div>
+    <details class="function" id="fn-finite">
+      <summary><code>train_diffusion_model_on_dataset(train_data, ...)</code></summary>
+      <div class="function-body"><span class="tag">Variant</span><p>不再每 step 從 true GMM 無限抽新 sample，而是反覆從固定 <code>train_data</code> resample。這就是 finite-data experiment 的關鍵改動，對應 Task 004。</p></div>
+    </details>
 
-  <h2>Models</h2>
+    <p class="footer-note"><a href="https://github.com/LutherAbel/Diffusion-Models-Experiment/blob/main/src/diffusion.py" target="_blank" rel="noopener">Open current src/diffusion.py on GitHub →</a></p>
+  </section>
 
-  <div class="card fn" id="zh-NoisePredictorMLP">
-    <h3><code>NoisePredictorMLP(data_dim, hidden_dim=128)</code></h3>
-    <p><b>它在幹嘛。</b>這是可訓練的網路本體。它是一個 MLP (multi-layer perceptron，就是純粹的全連接層堆疊，沒有更花俏的結構)。</p>
-    <p>輸入是 noisy 樣本 <code>x</code> 和時間 <code>t_model</code>，兩個接成一條向量。輸出是「藏在 x 裡的 noise」的猜測值，維度跟資料一樣。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>data_dim</code></td><td>資料的維度 (這個專案裡是 2 或 32)</td><td>int</td></tr>
-      <tr><td><code>hidden_dim</code></td><td>隱藏層的寬度</td><td>int，預設 128</td></tr>
-      <tr><td><code>self.net</code></td><td>4 層 Linear，中間夾 SiLU activation</td><td>nn.Sequential</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b>三個 training 函式訓練它，每個 sampler 的迴圈裡呼叫它。</p>
-  </div>
+  <section id="variables">
+    <h2>7. 常用變數表</h2>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Variable</th><th>你看到它時要想到什麼</th></tr>
+        <tr><td><code>x₀</code></td><td>clean target sample</td></tr>
+        <tr><td><code>x_t</code> / sampler 裡的 <code>x</code></td><td>目前 noise level 的 sample</td></tr>
+        <tr><td><code>ε</code> / <code>noise</code></td><td>training 時我們自己加的 Gaussian noise；ground truth target</td></tr>
+        <tr><td><code>ε̂</code> / <code>predicted_noise</code></td><td>model 對 ε 的 prediction</td></tr>
+        <tr><td><code>x0_hat</code></td><td>由 <code>x_t</code> 和 <code>ε̂</code> 反推出來的 clean estimate</td></tr>
+        <tr><td><code>β_t</code></td><td>單一步驟的 noise schedule increment</td></tr>
+        <tr><td><code>α_t</code></td><td><code>1−β_t</code></td></tr>
+        <tr><td><code>ᾱ_t</code></td><td>累積 signal retention；forward / reverse 公式真正一直用的 quantity</td></tr>
+        <tr><td><code>t</code>, <code>s</code></td><td>reverse jump 從目前 t 到下一個 s，且 s &lt; t</td></tr>
+        <tr><td><code>t_model</code></td><td><code>t/T</code>，送給 MLP 的 normalized time</td></tr>
+        <tr><td><code>T</code></td><td>完整 diffusion schedule 的步數 / resolution</td></tr>
+        <tr><td><code>NFE</code></td><td>sampling 真正 model call 的次數</td></tr>
+        <tr><td><code>initial_noise</code></td><td>sampling 起點；controlled comparison 常固定同一 tensor</td></tr>
+        <tr><td><code>step_noise</code></td><td>stochastic reverse step 新抽的 Gaussian noise</td></tr>
+        <tr><td><code>eta</code></td><td>fresh stochasticity dial：0 = DDIM，1 = DDPM endpoint</td></tr>
+      </table>
+    </div>
+  </section>
 
-  <div class="card fn" id="zh-OracleNoiseModel">
-    <h3><code>OracleNoiseModel(means, alpha_bars, sigma0)</code> <span class="note">(task 011 新增)</span></h3>
-    <p><b>它在幹嘛。</b>這個 model 不用訓練。它直接用已知的 GMM 公式，算出數學上正確的 noise 預測。</p>
-    <p>它存在的原因是，一般實驗裡有兩個誤差來源混在一起，「model 學得不準」和「sampler 本身走一步掉一點精度」。把 oracle 換進去，第一個誤差來源就被精確歸零，剩下的誤差全都屬於 sampler。</p>
-    <p>forward 的計算可以一步一步拆開來看。第 1 步，把 0 到 1 的 <code>t_model</code> 換算回整數步 <code>t</code>，查表得到 <code>abar</code>。</p>
-    <p>第 2 步，算 <code>s2</code>，也就是第 t 步時每個 GMM component 的 variance。它由兩部分組成，component 自己的散布 (被 abar 縮小) 加上已注入的 noise。</p>
-    <p>第 3 步，算 <code>centers</code>，各 component 的中心在第 t 步的位置 (原本的 means 乘上 √abar 縮小)。</p>
-    <p>第 4 步，對每個樣本、每個 component，算距離平方 <code>sqr_dist</code>，轉成 <code>log_density</code>，再過 softmax。結果 <code>corresponding_prob</code> 的意思是「這個樣本來自第 k 個 component 的機率」。</p>
-    <p>第 5 步，單一高斯的 score (log density 的梯度) 是 (中心 − x) / variance。混合分布的 score，就是把各 component 的 score 用第 4 步的機率加權平均，得到 <code>score</code>。</p>
-    <p>第 6 步，用 eps_hat = −√(1−abar)·score 把 score 換成 noise 預測，回傳。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>sigma0</code></td><td>t=0 時各 component 的標準差</td><td>float</td></tr>
-      <tr><td><code>abar</code></td><td>alpha_bars[t]</td><td>scalar tensor</td></tr>
-      <tr><td><code>s2</code></td><td>第 t 步各 component 的 variance</td><td>scalar tensor</td></tr>
-      <tr><td><code>centers</code></td><td>縮到第 t 步的 component 中心</td><td>tensor (K, dim)</td></tr>
-      <tr><td><code>diff</code></td><td>x 減去每個中心</td><td>tensor (n, K, dim)</td></tr>
-      <tr><td><code>sqr_dist</code></td><td>到每個中心的距離平方</td><td>tensor (n, K)</td></tr>
-      <tr><td><code>log_density</code></td><td>差一個常數的 log density</td><td>tensor (n, K)</td></tr>
-      <tr><td><code>corresponding_prob</code></td><td>P(component k | 樣本 i)</td><td>tensor (n, K)</td></tr>
-      <tr><td><code>score</code></td><td>每個樣本位置上的 mixture score</td><td>tensor (n, dim)</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b>可以直接放進任何 sampler 取代 <code>NoisePredictorMLP</code>。<code>experiments/eta_sweep_oracle.py</code> 就是這樣用它。</p>
-  </div>
+  <section id="debug">
+    <h2>8. 讀一段 diffusion code 時，先問這 6 題</h2>
+    <div class="checklist">
+      <div class="check"><b>① 現在是 training 還是 sampling？</b><br><span class="mini-label">不要先看公式，先看 phase。</span></div>
+      <div class="check"><b>② 這裡的 <code>x</code> 是 <code>x₀</code> 還是 <code>x_t</code>？</b><br><span class="mini-label">大部分 confusion 都從這裡開始。</span></div>
+      <div class="check"><b>③ noise 是 ground truth ε 還是 predicted <code>ε̂</code>？</b></div>
+      <div class="check"><b>④ 現在用的是 T 還是 NFE？</b><br><span class="mini-label">schedule grid 和 sampling budget 是兩件事。</span></div>
+      <div class="check"><b>⑤ 這一步有沒有 fresh random noise？</b><br><span class="mini-label">這通常就是 DDIM / DDPM / η 的差別。</span></div>
+      <div class="check"><b>⑥ 哪個東西被 fixed、哪個東西被 changed？</b><br><span class="mini-label">這決定 experiment 能不能做 causal interpretation。</span></div>
+    </div>
+  </section>
 
-  <h2>Training</h2>
-
-  <div class="card fn" id="zh-make_diffusion_batch">
-    <h3><code>make_diffusion_batch(batch_size, cfg, means, alpha_bars)</code></h3>
-    <p><b>它在幹嘛。</b>造一批訓練資料，分四個動作。</p>
-    <p>動作 1，從 GMM 抽乾淨樣本 <code>x0</code>。</p>
-    <p>動作 2，每個樣本各自隨機抽一個 1 到 T 之間的時間步 <code>t_indices</code>。</p>
-    <p>動作 3，抽標準常態的 <code>noise</code>。</p>
-    <p>動作 4，用 forward 公式混合，x_t = √ᾱ_t·x0 + √(1−ᾱ_t)·noise。</p>
-    <p>有一個重點，<code>noise</code> 會跟 <code>x_t</code> 一起回傳，因為剛抽出來的 noise 本身就是訓練時要對答案的「正確答案」。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>t_indices</code></td><td>每個樣本抽到的整數時間步</td><td>tensor (n,)</td></tr>
-      <tr><td><code>alpha_bar_t</code></td><td>按各樣本自己的時間步查到的 ᾱ</td><td>tensor (n, 1)</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b><code>train_diffusion_model</code> 每一步都呼叫它。</p>
-  </div>
-
-  <div class="card fn" id="zh-train_diffusion_model">
-    <h3><code>train_diffusion_model(cfg, seed, alpha_bars, …)</code></h3>
-    <p><b>它在幹嘛。</b>標準的 training loop。每一輪做四件事，跟 <code>make_diffusion_batch</code> 拿一批新資料、讓 model 預測 noise、算預測值和真 noise 的均方差當 loss、讓 Adam (optimizer 的一種) 更新權重。</p>
-    <p>因為每一批都是重新抽的 GMM 樣本，這個 loop 等於是在無限資料上訓練。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>training_steps</code></td><td>optimizer 更新幾次</td><td>int，預設 3000</td></tr>
-      <tr><td><code>learning_rate</code></td><td>Adam 的步伐大小</td><td>float，預設 2e-3</td></tr>
-      <tr><td><code>hidden_dim</code></td><td>傳給 MLP 的寬度</td><td>int，預設 128</td></tr>
-      <tr><td><code>loss</code></td><td>與真 noise 的均方差</td><td>scalar tensor</td></tr>
-      <tr><td><code>loss_history</code></td><td>每一步的 loss 數值</td><td>list of float</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b>回傳 (model, means, loss_history)，訓練好的 model 就是每個 sampler 收到的那個。</p>
-  </div>
-
-  <h2>Sampling</h2>
-
-  <div class="card fn" id="zh-ddpm_jump_posterior">
-    <h3><code>ddpm_jump_posterior(x_t, x0_hat, t, s, alpha_bars)</code></h3>
-    <p><b>它在幹嘛。</b>sampler 迴圈裡的小幫手。給它現在的 noisy 樣本 <code>x_t</code> 和目前估出的乾淨樣本 <code>x0_hat</code>，它回答的問題是，如果要從第 t 步跳到第 s 步，x_s 應該長什麼分布。</p>
-    <p>答案是一個高斯分布，所以它回傳兩個東西，<code>mean</code> 和 <code>variance</code>。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>alpha_jump</code></td><td>ᾱ_t / ᾱ_s，這一跳保留的訊號比例</td><td>scalar tensor</td></tr>
-      <tr><td><code>mean</code></td><td>posterior 的 mean，由 x0_hat 和 x_t 加權組成</td><td>tensor (n, dim)</td></tr>
-      <tr><td><code>variance</code></td><td>posterior 的 variance σ̃²</td><td>scalar tensor</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b><code>sample_ddpm</code>、<code>sample_eta</code>、<code>sample_sigma_hat</code> 都呼叫它。</p>
-  </div>
-
-  <div class="card fn" id="zh-sample_ddim">
-    <h3><code>sample_ddim(model, n_samples, cfg, nfe, alpha_bars, …)</code></h3>
-    <p><b>它在幹嘛。</b>deterministic 的 sampler。deterministic 的意思是，迴圈途中完全不再抽新的亂數，所以同一個起始 noise 永遠得到同一個輸出。</p>
-    <p>迴圈的每一輪做三件事。第一，model 預測目前 <code>x</code> 裡的 noise。</p>
-    <p>第二，用這個預測反推乾淨樣本的估計，x0_hat = (x − √(1−ᾱ_t)·eps_hat) / √ᾱ_t。</p>
-    <p>第三，用 DDIM 公式把 x 重組到下一步 s，x = √ᾱ_s·x0_hat + √(1−ᾱ_s)·eps_hat。它重複使用「預測出來的」noise 而不是抽新的，這正是它 deterministic 的原因。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>initial_noise</code></td><td>可選的固定起始 noise，None 就現抽</td><td>tensor 或 None</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b>產生用於 evaluation 的樣本，也是 eta sweep 的 η=0 端點。</p>
-  </div>
-
-  <div class="card fn" id="zh-sample_eta">
-    <h3><code>sample_eta(model, n_samples, cfg, nfe, alpha_bars, eta, …)</code></h3>
-    <p><b>它在幹嘛。</b>一個有旋鈕的 sampler。旋鈕是 <code>eta</code>，一個 0 到 1 的數字，控制每一步 reverse update 要加入多少「新抽的」noise。</p>
-    <p>eta = 0 時它等於 DDIM (完全不加新 noise)。eta = 1 時它等於 DDPM 的 jump posterior (加足量新 noise)。中間的值就是兩者之間的內插。</p>
-    <p>具體來說，每一步先算 sigma = eta · √(posterior variance)，然後把三個成分加起來，分別是乾淨估計 x0_hat、預測 noise (權重是 <code>noise_coef</code>)、新抽的 <code>step_noise</code> (權重是 sigma)。</p>
-    <p>有兩個實作細節想提一下。<code>noise_coef</code> 裡的 clamp 只是保護開根號不要吃到浮點誤差造成的微小負數。</p>
-    <p>另一個是 <code>step_noise</code> 每一步都會抽，就算 eta = 0 用不到也照抽。原因是這樣一來，所有 eta 設定消耗的是同一串亂數，不同 eta 之間的差異就只來自 eta 本身，不會混入「抽到不同亂數」的差異。這個技巧叫 common random numbers。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>eta</code></td><td>0 到 1 的新 noise 旋鈕</td><td>float</td></tr>
-      <tr><td><code>generator</code></td><td>step noise 專用的亂數流</td><td>torch.Generator</td></tr>
-      <tr><td><code>sigma</code></td><td>eta · √posterior_variance，新 noise 的大小</td><td>scalar tensor</td></tr>
-      <tr><td><code>noise_coef</code></td><td>√(1 − ᾱ_s − σ²)，預測 noise 的權重</td><td>scalar tensor</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b>呼叫 <code>ddpm_jump_posterior</code>；task 010/011 的 eta sweep 背後就是它。</p>
-  </div>
-
-  <div class="card fn" id="zh-sample_sigma_hat">
-    <h3><code>sample_sigma_hat(model, n_samples, cfg, nfe, alpha_bars, …)</code></h3>
-    <p><b>它在幹嘛。</b>迴圈形狀跟 DDPM 一樣，先預測 noise、估 x0_hat，再跟 <code>ddpm_jump_posterior</code> 拿 posterior 的 <em>mean</em>。</p>
-    <p>唯一的差別在 variance。它不用 posterior variance，改用較大的選擇 σ̂² = 1 − alpha_jump (Song et al. 2021 的 Table 1 裡 σ̂ 那一列)。</p>
-    <p>留著它的原因是，論文回報這個選擇在步數被截短 (NFE 小) 的時候會嚴重劣化，所以它在我們的比較裡是一個對照組。</p>
-    <p><b>獨有變數。</b>只有再利用 <code>alpha_jump</code> = ᾱ_t/ᾱ_s 當 noise 的大小，√(1−alpha_jump)·step_noise。其餘全在共用表。</p>
-    <p><b>它連到誰。</b>mean 來自 <code>ddpm_jump_posterior</code>；作為 ancestral sampling 的對照組。</p>
-  </div>
-
-  <div class="card fn" id="zh-sample_ddpm">
-    <h3><code>sample_ddpm(model, n_samples, cfg, nfe, alpha_bars, …)</code></h3>
-    <p><b>它在幹嘛。</b>ancestral sampling，意思是每一步 reverse 都真的從 jump posterior「抽」一個樣本出來，而不是走 deterministic 的規則。</p>
-    <p>迴圈的每一輪會預測 noise、反推 x0_hat、跟 <code>ddpm_jump_posterior</code> 拿 mean 和 variance，然後抽 x_s = mean + √variance · step_noise。</p>
-    <p>最後一跳 (s = 0) 不加 noise，直接回傳 mean。</p>
-    <p><b>獨有變數。</b>沒有，它用到的東西全在共用表裡。</p>
-    <p><b>它連到誰。</b>呼叫 <code>ddpm_jump_posterior</code>；效果上等於 <code>sample_eta</code> 在 eta = 1 (亂數流細節不同)；產生用於 evaluation 的樣本。</p>
-  </div>
-
-  <h2>變形版 pipeline</h2>
-
-  <div class="card fn" id="zh-make_anisotropic_diffusion_batch">
-    <h3><code>make_anisotropic_diffusion_batch(batch_size, cfg, means, alpha_bars)</code></h3>
-    <p><b>它在幹嘛。</b>跟 <code>make_diffusion_batch</code> 一模一樣，只差乾淨樣本的來源換成 <code>sample_anisotropic_gmm</code>，也就是各 component 的 covariance 被拉長 (不是圓形) 的版本。</p>
-    <p>回傳值也少了 <code>t_indices</code>，只回 (x_t, t_model, noise)。</p>
-    <p><b>它連到誰。</b><code>train_anisotropic_diffusion_model</code> 裡面呼叫它。</p>
-  </div>
-
-  <div class="card fn" id="zh-train_anisotropic_diffusion_model">
-    <h3><code>train_anisotropic_diffusion_model(cfg, seed, alpha_bars, …)</code></h3>
-    <p><b>它在幹嘛。</b>跟 <code>train_diffusion_model</code> 相同的 loop，只把資料來源換成非等向的 batch 生產器。它的超參數 (training_steps、batch_size、learning_rate) 沒有預設值，必須明給。</p>
-    <p><b>它連到誰。</b>產生非等向實驗用的 model (task 002/008 那條線)。</p>
-  </div>
-
-  <div class="card fn" id="zh-train_diffusion_model_on_dataset">
-    <h3><code>train_diffusion_model_on_dataset(train_data, cfg, seed, alpha_bars, …)</code></h3>
-    <p><b>它在幹嘛。</b><code>train_diffusion_model</code> 的有限資料版。差別只有一行，它不是每步重新抽全新的 GMM 樣本，而是每批都從固定的 <code>train_data</code> 裡重抽。</p>
-    <p>這是研究「訓練資料有限時會發生什麼事」的工具。它只回傳 model。</p>
-    <p><b>獨有變數。</b></p>
-    <div class="table-wrap"><table>
-      <tr><th>變數名</th><th>裝什麼</th><th>型態</th></tr>
-      <tr><td><code>train_data</code></td><td>固定的有限訓練集</td><td>tensor (N, dim)</td></tr>
-    </table></div>
-    <p><b>它連到誰。</b>有限資料實驗 (task 004/006 那條線)。</p>
-  </div>
-
-  <h2>三個可以辨認的程式模板</h2>
-  <div class="templates">
-    <div class="card"><h3>Schedule</h3><pre><code>coefficients = build_schedule(...)
-alpha_bar_t = coefficients[t]
-result = formula(alpha_bar_t, x)</code></pre></div>
-    <div class="card"><h3>Training</h3><pre><code>prediction = model(inputs)
-loss = compare(prediction, target)
-optimizer.zero_grad()
-loss.backward()
-optimizer.step()</code></pre></div>
-    <div class="card"><h3>Sampling</h3><pre><code>model.eval()
-for t, s in reverse_steps:
-    eps_hat = model(x, t)
-    x0_hat = estimate_clean(...)
-    x = reverse_update(...)</code></pre></div>
+  <div class="callout" style="margin-top:34px">
+    <b>最短閱讀路線：</b> 如果你只是要重新進入這個 codebase，讀 <code>make_diffusion_schedule</code> → <code>make_diffusion_batch</code> → <code>train_diffusion_model</code> → <code>sample_ddim</code> → <code>ddpm_jump_posterior</code> → <code>sample_ddpm</code>。理解這六個之後，再讀 η 和 oracle control。
   </div>
 </main>
-<script>
-(function () {
-  var radios = { en: document.getElementById("language-en"), zh: document.getElementById("language-zh") };
-  var saved = null;
-  try { saved = localStorage.getItem("handbookLanguage"); } catch (e) {}
-  if (radios[saved]) { radios[saved].checked = true; }
-  Object.keys(radios).forEach(function (lang) {
-    radios[lang].addEventListener("change", function () {
-      try { localStorage.setItem("handbookLanguage", lang); } catch (e) {}
-    });
-  });
-})();
-</script>
 </body>
 </html>
