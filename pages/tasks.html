@@ -54,6 +54,14 @@
   .result-table th:first-child,.result-table td:first-child { text-align:left; }
   .result-table th { color:var(--muted); font-weight:650; }
   .note { margin-top:11px; color:var(--muted); font-size:.91rem; }
+  .experiment-card { margin:20px 0 0; border-top:1px solid var(--line); }
+  .fact-row { display:grid; grid-template-columns:92px minmax(0,1fr); gap:18px; padding:11px 0; border-bottom:1px solid var(--line); }
+  .fact-label { color:var(--muted); font-size:.77rem; font-weight:750; letter-spacing:.05em; text-transform:uppercase; }
+  .fact-value { margin:0; }
+  .fact-value ul { margin:0; padding-left:1.15rem; }
+  .resource-links { display:flex; flex-wrap:wrap; gap:8px; }
+  .resource-links a { display:inline-block; padding:4px 9px; border:1px solid #cbdcf8; border-radius:5px; color:var(--blue); background:#f7faff; text-decoration:none; font-size:.9rem; }
+  .resource-links a:hover { background:var(--blue-soft); }
   .matrix { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin-top:12px; }
   .matrix div { padding:9px 10px; border:1px solid var(--line); border-radius:5px; background:var(--panel); }
   .timeline { margin-top:10px; padding-left:0; list-style:none; }
@@ -61,7 +69,7 @@
   .timeline li:last-child { padding-bottom:0; }
   .timeline strong { display:block; }
   code { padding:1px 4px; border-radius:3px; color:var(--blue); background:#f1f5fb; font-family:ui-monospace,Consolas,monospace; font-size:.9em; }
-  @media (max-width:760px) { .page { padding:24px 20px 80px; } .contents { max-height:300px; } .matrix { grid-template-columns:1fr; } }
+  @media (max-width:760px) { .page { padding:24px 20px 80px; } .contents { max-height:300px; } .matrix { grid-template-columns:1fr; } .fact-row { grid-template-columns:1fr; gap:3px; } }
 </style>
 </head>
 <body>
@@ -98,11 +106,16 @@
     <section aria-live="polite">
       <article id="task-001">
         <p class="eyebrow">TASK 001 <span class="status done">已完成</span></p><h2>DDPM、DDIM 與 RF 基準比較</h2>
-        <p class="lead">先建立 2D 8-mode GMM 的共同基準，讓後面的實驗知道每種 sampler 在不同 NFE 下的起點。</p>
-        <section class="section"><h3>問題與設計</h3><p>比較 Rectified Flow、DDPM、DDIM。固定 <code>T=300</code>、NFE = 1, 5, 20, 100、initial noise 與 SWD projection。diffusion 使用 scaled linear β schedule。</p><div class="flow"><span>乾淨 GMM</span><b>→</b><span>訓練 model</span><b>→</b><span>三種 sampler</span><b>→</b><span>SWD</span></div></section>
-        <section class="section"><h3>已得到的結果</h3><table class="result-table"><tr><th>方法</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>2.466</td><td>0.229</td><td>0.090</td><td>0.072</td></tr><tr><td>DDPM</td><td>7.822</td><td>0.383</td><td>0.149</td><td>0.111</td></tr><tr><td>DDIM</td><td>7.822</td><td>0.791</td><td>0.298</td><td>0.228</td></tr></table><p class="note">這是一個執行 run，不是所有問題的一般結論。</p></section>
-        <section class="section"><h3>決策、審查與變更</h3><ul><li>原本未縮放的 schedule 使 terminal SNR 不合理，因此改為 scaled linear β schedule。</li><li>審查確認 <code>s=0</code> posterior、time normalization 與共用 SWD projections 的實作。</li><li>補上 NFE = 1 時 DDPM/DDIM 相等的檢查。</li></ul></section>
-        <section class="section"><h3>目前定位</h3><p>基準實作已通過審查。它提供後續 task 的比較條件，不足以宣稱任一 sampler 永遠較好。</p></section>
+        <div class="experiment-card">
+          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">在同一個簡單 2D GMM、相同 NFE budget 下，RF、DDPM 和 deterministic DDIM 的 sampling quality 差多少？</p></div>
+          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Sampler：RF / DDPM / DDIM；NFE：1 / 5 / 20 / 100。</p></div>
+          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">同一個 2D 8-mode GMM（radius 4、component std .30）、同一組 exact target samples、同一組 initial noise、同一組 SWD projections。RF 與 diffusion 都訓練 3000 steps；diffusion 使用 <code>T=300</code> 的 scaled linear β schedule。</p></div>
+          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Generated samples 與 exact GMM samples 的 Sliced Wasserstein Distance (SWD)。越低越好。</p></div>
+          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">這個 baseline run 中，RF 在所有測試 NFE 都有最低 SWD。NFE 5、20、100 時 DDPM 低於 DDIM；NFE 1 時 DDPM 與 DDIM 相同。</p></div>
+          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">先建立後續實驗的起點。這個結果只能描述這個 controlled 2D setting，不能單靠它說 RF 一般而言比較好，也還不能解釋 sampler 差異從哪個 mechanism 來。</p></div>
+          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/baseline_2d.py" target="_blank" rel="noopener">experiments/baseline_2d.py</a></div></div>
+          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/baseline_2d.csv" target="_blank" rel="noopener">baseline_2d.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/baseline_2d_swd.png" target="_blank" rel="noopener">baseline_2d_swd.png</a></div><table class="result-table"><tr><th>方法</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>2.466</td><td>0.229</td><td>0.090</td><td>0.072</td></tr><tr><td>DDPM</td><td>7.822</td><td>0.383</td><td>0.149</td><td>0.111</td></tr><tr><td>DDIM</td><td>7.822</td><td>0.791</td><td>0.298</td><td>0.228</td></tr></table><p class="note">Implementation note: 原本未縮放的 schedule 因 terminal SNR 不合適而被換掉。現在的 baseline 使用 scaled schedule。</p></div></div>
+        </div>
       </article>
       <article id="task-002">
         <p class="eyebrow">TASK 002 <span class="status done">已完成</span></p><h2>非等向 covariance</h2>
@@ -194,7 +207,19 @@
       <a class="task-link" href="#task-010"><span class="number">010</span>Eta sweep</a>
     </nav></details></aside>
     <section aria-live="polite">
-      <article id="task-001"><p class="eyebrow">TASK 001 <span class="status done">Complete</span></p><h2>DDPM, DDIM, and RF baseline</h2><p class="lead">Create one common 2D 8-mode GMM benchmark before testing any geometry or data changes.</p><section class="section"><h3>Question and design</h3><p>Compare Rectified Flow, DDPM, and DDIM with <code>T=300</code>, NFE 1, 5, 20, and 100, shared initial noise, and shared SWD projections. Diffusion uses a scaled linear beta schedule.</p></section><section class="section"><h3>Recorded result</h3><table class="result-table"><tr><th>Method</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>2.466</td><td>.229</td><td>.090</td><td>.072</td></tr><tr><td>DDPM</td><td>7.822</td><td>.383</td><td>.149</td><td>.111</td></tr><tr><td>DDIM</td><td>7.822</td><td>.791</td><td>.298</td><td>.228</td></tr></table><p class="note">This is one recorded run, not a general ranking.</p></section><section class="section"><h3>Decision and review</h3><p>The unscaled schedule had unsuitable terminal SNR, so the scaled schedule replaced it. Review checked the <code>s=0</code> posterior, time normalization, shared projections, and the NFE 1 DDPM/DDIM equality check.</p></section></article>
+      <article id="task-001">
+        <p class="eyebrow">TASK 001 <span class="status done">Complete</span></p><h2>DDPM, DDIM, and RF baseline</h2>
+        <div class="experiment-card">
+          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">How do RF, DDPM, and deterministic DDIM compare on the same simple 2D GMM under the same NFE budget?</p></div>
+          <div class="fact-row"><div class="fact-label">Changed</div><p class="fact-value">Sampler: RF / DDPM / DDIM. NFE: 1 / 5 / 20 / 100.</p></div>
+          <div class="fact-row"><div class="fact-label">Fixed</div><p class="fact-value">Same 2D 8-mode GMM (radius 4, component std .30), exact target samples, initial noise, and SWD projections. RF and diffusion are both trained for 3000 steps. Diffusion uses <code>T=300</code> with a scaled linear beta schedule.</p></div>
+          <div class="fact-row"><div class="fact-label">Metric</div><p class="fact-value">Sliced Wasserstein Distance (SWD) between generated samples and exact GMM samples. Lower is better.</p></div>
+          <div class="fact-row"><div class="fact-label">Result</div><p class="fact-value">RF had the lowest SWD at every tested NFE in this baseline run. DDPM was below DDIM at NFE 5, 20, and 100. DDPM and DDIM were identical at NFE 1.</p></div>
+          <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">This gives the later experiments a starting point. It does not show that RF is generally better, and it does not tell us which mechanism caused the sampler differences.</p></div>
+          <div class="fact-row"><div class="fact-label">Code</div><div class="fact-value resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/experiments/baseline_2d.py" target="_blank" rel="noopener">experiments/baseline_2d.py</a></div></div>
+          <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><div class="resource-links"><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/tables/baseline_2d.csv" target="_blank" rel="noopener">baseline_2d.csv</a><a href="https://github.com/LutherAbel/diffusion-model-experiment/blob/main/results/figures/baseline_2d_swd.png" target="_blank" rel="noopener">baseline_2d_swd.png</a></div><table class="result-table"><tr><th>Method</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>RF</td><td>2.466</td><td>.229</td><td>.090</td><td>.072</td></tr><tr><td>DDPM</td><td>7.822</td><td>.383</td><td>.149</td><td>.111</td></tr><tr><td>DDIM</td><td>7.822</td><td>.791</td><td>.298</td><td>.228</td></tr></table><p class="note">Implementation note: the unscaled schedule had unsuitable terminal SNR, so this baseline uses the scaled schedule.</p></div></div>
+        </div>
+      </article>
       <article id="task-002"><p class="eyebrow">TASK 002 <span class="status done">Complete</span></p><h2>Anisotropic covariance</h2><p class="lead">Turn circular GMM components into oriented ellipses to test whether the baseline depends on isotropic Gaussians.</p><section class="section"><h3>Design and result</h3><p>Ratios 4 and 9 used <code>(σr, σt)=(.60,.15)</code> and <code>(.90,.10)</code>. Across the three-seed sweeps, RF had the lowest mean SWD at every tested NFE.</p></section><section class="section"><h3>Review consequence</h3><p>The comparison changed anisotropy and total variance together, so it cannot isolate shape. Task 008 was opened as a 2×2 control.</p></section></article>
       <article id="task-003"><p class="eyebrow">TASK 003 <span class="status done">Complete</span></p><h2>32D baseline</h2><p class="lead">Embed the eight modes in the first two coordinates of a 32D target.</p><section class="section"><h3>Design</h3><p>The remaining 30 coordinates are zero-mean isotropic noise. The recorded metric is all-coordinate SWD.</p></section><section class="section"><h3>Decision and next action</h3><p>Review approved the implementation but identified projection dilution as a risk. Task 007 will compare this metric with SWD over only the two mode-bearing coordinates.</p></section></article>
       <article id="task-004"><p class="eyebrow">TASK 004 <span class="status done">Complete</span></p><h2>Finite data and mode separation</h2><p class="lead">Test whether training-set size and distance between modes change relative sampler quality.</p><section class="section"><h3>Result revision</h3><p>An early single-seed radius-6 run showed DDPM ahead at NFE 20 and 100. In the three-seed replication, RF had the lowest mean at every NFE for radii 1.5 and 6.0. The crossing did not persist.</p></section><section class="section"><h3>Next action</h3><p>This made a larger finite-data replication necessary, which became Task 006.</p></section></article>
