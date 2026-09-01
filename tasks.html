@@ -55,10 +55,8 @@
 <main class="page">
   <h1>Diffusion Model Workspace</h1>
   <nav class="tabs" aria-label="主要頁籤">
-    <a href="../index.html">研究手冊</a>
-    <a href="research-questions.html">研究問題</a>
+    <a class="active" href="tasks.html">任務</a>
     <a href="diffusion-guide.html">Diffusion.py 教學</a>
-    <a class="active" href="#task-007">任務</a>
   </nav>
 
   <div class="workspace">
@@ -154,7 +152,7 @@
           <div class="fact-row"><div class="fact-label">Result</div><div class="fact-value"><p>Learned-model η sweep：NFE &gt; 1 時，η 從 0 增加到 1，SWD 單調下降；NFE 1 全部相同。</p><table class="result-table"><tr><th>setting</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>η=0</td><td>7.420</td><td>.774</td><td>.319</td><td>.237</td></tr><tr><td>η=.25</td><td>7.420</td><td>.748</td><td>.288</td><td>.214</td></tr><tr><td>η=.5</td><td>7.420</td><td>.683</td><td>.236</td><td>.167</td></tr><tr><td>η=.75</td><td>7.420</td><td>.567</td><td>.140</td><td>.128</td></tr><tr><td>η=1</td><td>7.420</td><td>.363</td><td>.107</td><td>.112</td></tr><tr><td>sigma_hat</td><td>7.420</td><td>.327</td><td>.111</td><td>.112</td></tr></table><p class="note">Oracle B2：NFE 5 的 η=1 比 η=0 差，5/5 paired replicates 同方向（mean diff +.0181）；NFE 20 的 sigma_hat 比 η=0 好，5/5 同方向（mean diff −.0205）。</p></div></div>
           <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">Learned run 中 stochasticity 的 benefit 在 exact-score NFE 5 反轉，這支持「learned-model error 是其中一個來源」。但 oracle 的 <code>sigma_hat</code> 在 NFE 20 仍有穩定改善，所以 stochasticity 也可能影響 finite-step sampler / discretization。還不能把效果歸因成單一 mechanism。</p></div>
           <div class="fact-row"><div class="fact-label">Evidence</div><p class="fact-value">DDIM paper 的 CIFAR truncated-sampling observation 是 η 增加時 FID 變差，方向和本專案 learned 2D GMM 相反；dataset、model、metric 不同，因此只作為 motivation，不作直接 comparison。</p></div>
-          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">目前 connected <code>diffusion-model-experiment/main</code> 仍沒有 η / oracle experiment file；Handbook 只記錄已得到的 frozen results。</p></div>
+          <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">目前 connected <code>diffusion-model-experiment/main</code> 仍沒有 η / oracle experiment file；網站只記錄已得到的 frozen results。</p></div>
           <div class="fact-row"><div class="fact-label">Outputs</div><p class="fact-value">已記錄 η sweep 與 oracle B2 results。仍待 high-noise limit check、learned-side replication；<code>sigma_hat</code> 的低-NFE行為也還沒有完整解釋。</p></div>
         </div>
       </article>

@@ -45,7 +45,7 @@
   <div class="language-switch"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
   <h1>Diffusion.py Guide</h1>
   <div class="meta">The 14 primary functions and classes in <code>src/diffusion.py</code>, one at a time. Shared variables are explained once in one table, and each entry then has three parts, what it does, its unique variables, and what it connects to.</div>
-  <nav class="nav"><a href="../index.html">Handbook</a><a href="research-questions.html">Research questions</a><b>Diffusion.py guide</b><a href="tasks.html">Tasks</a></nav>
+  <nav class="nav"><a href="tasks.html">Tasks</a><b>Diffusion.py guide</b></nav>
 
   <div class="card status"><p><b>The core idea splits into two sentences.</b> During training, we take clean data, add noise whose exact value we know, and teach a model to recover that noise. During sampling, we start from pure random noise, ask the trained model to estimate the noise inside, remove part of it, and repeat until clean data remains.</p></div>
 
@@ -353,7 +353,7 @@ for t, s in reverse_steps:
   <div class="language-switch"><label for="language-en">English</label><label for="language-zh">繁中</label></div>
   <h1>Diffusion.py 教學</h1>
   <div class="meta"><code>src/diffusion.py</code> 的 14 個主要函式與類別，一次一個。共用變數集中在一張表解釋一次，之後每個條目有三塊，它在幹嘛、獨有變數、它連到誰。</div>
-  <nav class="nav"><a href="../index.html">研究手冊</a><a href="research-questions.html">研究問題</a><b>Diffusion.py 教學</b><a href="tasks.html">任務</a></nav>
+  <nav class="nav"><a href="tasks.html">任務</a><b>Diffusion.py 教學</b></nav>
 
   <div class="card status"><p><b>核心概念可以拆成兩句來講。</b>訓練的時候，拿乾淨資料，加上我們知道確切數值的 noise，教 model 把那份 noise 猜回來。sampling 的時候，從純 random noise 出發，請訓練好的 model 估計裡面的 noise，去掉一部分，重複到只剩乾淨資料。</p></div>
 
