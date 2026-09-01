@@ -20,14 +20,14 @@
   .tabs { display:flex; flex-wrap:wrap; gap:6px 12px; margin:12px 0 20px; font-size:.9em; }
   .tabs a { padding:0; color:var(--blue); text-decoration:none; }
   .tabs .active { color:var(--ink); font-weight:700; }
-  .workspace { position:relative; display:block; margin-top:30px; padding-top:32px; }
-  aside { position:absolute; z-index:2; top:0; left:0; }
+  .workspace { display:block; margin-top:12px; }
+  aside { position:static; }
   details { position:static; }
   summary { display:flex; align-items:center; gap:10px; cursor:pointer; list-style:none; font-size:.83rem; font-weight:750; letter-spacing:.06em; }
   summary::-webkit-details-marker { display:none; }
   summary::before { content:"×"; font-size:2rem; font-weight:350; line-height:.7; }
   details:not([open]) summary::before { content:"☰"; font-size:1.15rem; }
-  .contents { position:absolute; top:30px; left:0; width:220px; max-height:calc(100vh - 112px); overflow-y:auto; margin:0; padding:18px 12px 18px 18px; background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:0 5px 20px rgba(31,35,40,.08); }
+  .contents { position:static; width:100%; max-height:300px; overflow-y:auto; margin:10px 0 18px; padding:18px 12px 18px 18px; background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:0 5px 20px rgba(31,35,40,.08); }
   .contents h2 { margin:0 0 10px; font-size:.76rem; letter-spacing:.08em; }
   .task-link { display:block; padding:8px 10px; border-radius:5px; color:var(--muted); text-decoration:none; }
   .task-link:hover,.task-link.current { color:var(--ink); background:var(--blue-soft); }
@@ -67,7 +67,7 @@
     <a href="../index.html">研究手冊</a>
     <a href="research-questions.html">研究問題</a>
     <a href="diffusion-guide.html">Diffusion.py 教學</a>
-    <a class="active" href="#task-010">任務</a>
+    <a class="active" href="#task-011">任務</a>
   </nav>
   <div class="workspace">
     <aside><details><summary>目錄</summary><nav class="contents" aria-label="任務目錄">
@@ -82,6 +82,7 @@
       <a class="task-link" href="#task-008"><span class="number">008</span>固定 variance anisotropy</a>
       <a class="task-link" href="#task-009"><span class="number">009</span>Ancestral sampling 文獻</a>
       <a class="task-link" href="#task-010"><span class="number">010</span>η sweep</a>
+      <a class="task-link" href="#task-011"><span class="number">011</span>誤差分解 controls</a>
     </nav></details></aside>
     <section aria-live="polite">
       <article id="task-001">
@@ -222,6 +223,17 @@
           <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><table class="result-table"><tr><th>setting</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>η=0</td><td>7.420</td><td>.774</td><td>.319</td><td>.237</td></tr><tr><td>η=.25</td><td>7.420</td><td>.748</td><td>.288</td><td>.214</td></tr><tr><td>η=.5</td><td>7.420</td><td>.683</td><td>.236</td><td>.167</td></tr><tr><td>η=.75</td><td>7.420</td><td>.567</td><td>.140</td><td>.128</td></tr><tr><td>η=1</td><td>7.420</td><td>.363</td><td>.107</td><td>.112</td></tr><tr><td>sigma_hat</td><td>7.420</td><td>.327</td><td>.111</td><td>.112</td></tr></table><p class="note"><code>sigma_hat</code> 在低 NFE 沒有崩壞仍待解釋。</p></div></div>
         </div>
       </article>
+      <article id="task-011">
+        <p class="eyebrow">TASK 011 <span class="status active-status">部分完成</span></p><h2>誤差分解 controls</h2>
+        <div class="experiment-card">
+          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">η sweep 裡 stochasticity 的效果，來自 learned-score 的 model error，還是 reverse update 的 discretization error？同時也量化從 <code>N(0, I)</code> 而非真實 <code>q(x_T)</code> 起跑的 prior mismatch。</p></div>
+          <div class="fact-row"><div class="fact-label">Shared fact</div><p class="fact-value">GMM 加噪後仍是 GMM。在訊號比例 <code>ᾱ</code>，component k 的 mean 是 <code>√ᾱ·μk</code>，variance 是 <code>ᾱσ₀² + (1−ᾱ)</code>；所以能精確抽樣，也有 closed-form score。</p></div>
+          <div class="fact-row"><div class="fact-label">Experiment A</div><p class="fact-value">Prior mismatch 尚未執行。會比較四個 β scale 下，從 <code>N(0, I)</code> 與真實 terminal <code>q(x_T)</code> 起跑的 SWD gap。</p></div>
+          <div class="fact-row"><div class="fact-label">Experiment B</div><p class="fact-value">Oracle-score η sweep 已完成。closed-form score 對 autograd 的檢查，以及 NFE 1 所有 setting 相同的檢查都通過；高噪聲極限檢查尚未完成。</p></div>
+          <div class="fact-row"><div class="fact-label">Oracle B2</div><div class="fact-value"><p>五個 paired replicates 顯示 NFE 5 的 <code>η=1</code> 比 <code>η=0</code> 差，方向與 learned run 相反。NFE 20 的 <code>sigma_hat</code> 則穩定優於 <code>η=0</code>。</p><table class="result-table"><tr><th>NFE</th><th>setting</th><th>mean paired diff</th><th>same sign 5/5</th></tr><tr><td>5</td><td>η=1.0</td><td>+.0181</td><td>yes</td></tr><tr><td>20</td><td>sigma_hat</td><td>−.0205</td><td>yes</td></tr><tr><td>20</td><td>η=1.0</td><td>−.0051</td><td>no</td></tr><tr><td>100</td><td>η=1.0</td><td>−.0089</td><td>no</td></tr></table></div></div>
+          <div class="fact-row"><div class="fact-label">Open</div><p class="fact-value">仍待完成高噪聲極限檢查、learned side replication，以及 prior mismatch 實驗。這些結果目前只涵蓋 2D、單一 SWD metric、五個 oracle replicates 與四個 NFE。</p></div>
+        </div>
+      </article>
     </section>
   </div>
 </main>
@@ -233,7 +245,7 @@
     <a href="../index.html">Handbook</a>
     <a href="research-questions.html">Research questions</a>
     <a href="diffusion-guide.html">Diffusion.py guide</a>
-    <a class="active" href="#task-010">Tasks</a>
+    <a class="active" href="#task-011">Tasks</a>
   </nav>
   <div class="workspace">
     <aside><details><summary>CONTENTS</summary><nav class="contents" aria-label="Task contents">
@@ -248,6 +260,7 @@
       <a class="task-link" href="#task-008"><span class="number">008</span>Controlled anisotropy</a>
       <a class="task-link" href="#task-009"><span class="number">009</span>Ancestral-sampling literature</a>
       <a class="task-link" href="#task-010"><span class="number">010</span>Eta sweep</a>
+      <a class="task-link" href="#task-011"><span class="number">011</span>Error-decomposition controls</a>
     </nav></details></aside>
     <section aria-live="polite">
       <article id="task-001">
@@ -386,6 +399,17 @@
           <div class="fact-row"><div class="fact-label">Meaning</div><p class="fact-value">This supports the narrower claim that stochasticity helps somewhere in the current learned-model sampling pipeline. It still cannot tell us whether the improvement comes from correcting model error or discretization error. The oracle-score experiment is the next control.</p></div>
           <div class="fact-row"><div class="fact-label">Code</div><p class="fact-value">The older Handbook record mentions <code>experiments/eta_sweep.py</code>, but that file is not present in the connected GitHub repo's current <code>main</code> branch, so no broken link is shown here.</p></div>
           <div class="fact-row"><div class="fact-label">Outputs</div><div class="fact-value"><table class="result-table"><tr><th>setting</th><th>NFE 1</th><th>NFE 5</th><th>NFE 20</th><th>NFE 100</th></tr><tr><td>eta=0</td><td>7.420</td><td>.774</td><td>.319</td><td>.237</td></tr><tr><td>eta=.25</td><td>7.420</td><td>.748</td><td>.288</td><td>.214</td></tr><tr><td>eta=.5</td><td>7.420</td><td>.683</td><td>.236</td><td>.167</td></tr><tr><td>eta=.75</td><td>7.420</td><td>.567</td><td>.140</td><td>.128</td></tr><tr><td>eta=1</td><td>7.420</td><td>.363</td><td>.107</td><td>.112</td></tr><tr><td>sigma_hat</td><td>7.420</td><td>.327</td><td>.111</td><td>.112</td></tr></table><p class="note">Why <code>sigma_hat</code> does not collapse at low NFE is still open.</p></div></div>
+        </div>
+      </article>
+      <article id="task-011">
+        <p class="eyebrow">TASK 011 <span class="status active-status">Partly complete</span></p><h2>Error-decomposition controls</h2>
+        <div class="experiment-card">
+          <div class="fact-row"><div class="fact-label">Question</div><p class="fact-value">Does the stochasticity effect in the eta sweep come from learned-score model error or reverse-update discretization error? This task also measures the prior-mismatch cost of starting from <code>N(0, I)</code> instead of the true <code>q(x_T)</code>.</p></div>
+          <div class="fact-row"><div class="fact-label">Shared fact</div><p class="fact-value">A noised GMM remains a GMM. At signal fraction <code>ᾱ</code>, component k has mean <code>√ᾱ·μk</code> and variance <code>ᾱσ₀² + (1−ᾱ)</code>, so both exact sampling and a closed-form score are available.</p></div>
+          <div class="fact-row"><div class="fact-label">Experiment A</div><p class="fact-value">Prior mismatch is not run yet. It will compare the SWD gap between starts from <code>N(0, I)</code> and the true terminal <code>q(x_T)</code> across four beta scales.</p></div>
+          <div class="fact-row"><div class="fact-label">Experiment B</div><p class="fact-value">The oracle-score eta sweep is complete. The closed-form score matches autograd, and all settings agree at NFE 1. The high-noise-limit check is still pending.</p></div>
+          <div class="fact-row"><div class="fact-label">Oracle B2</div><div class="fact-value"><p>Five paired replicates show that <code>eta=1</code> is worse than <code>eta=0</code> at NFE 5, the opposite direction from the learned run. At NFE 20, <code>sigma_hat</code> is consistently better than <code>eta=0</code>.</p><table class="result-table"><tr><th>NFE</th><th>setting</th><th>mean paired diff</th><th>same sign 5/5</th></tr><tr><td>5</td><td>eta=1.0</td><td>+.0181</td><td>yes</td></tr><tr><td>20</td><td>sigma_hat</td><td>−.0205</td><td>yes</td></tr><tr><td>20</td><td>eta=1.0</td><td>−.0051</td><td>no</td></tr><tr><td>100</td><td>eta=1.0</td><td>−.0089</td><td>no</td></tr></table></div></div>
+          <div class="fact-row"><div class="fact-label">Open</div><p class="fact-value">The high-noise-limit check, learned-side replication, and the prior-mismatch experiment are still outstanding. Current evidence covers 2D, one SWD metric, five oracle replicates, and four NFE values.</p></div>
         </div>
       </article>
     </section>
